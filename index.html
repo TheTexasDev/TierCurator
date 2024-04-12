@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Tier Curator</title>
+        <link rel="stylesheet" href="./style.css" />
+    </head>
+    <body>
+
+        <div id="adding_wrapper">
+            <div id="additional_dialog">
+                <input title="img link" id="img-link" placeholder="Link to image"/>
+                <input title="IMG src" id="img-file" type="file" multiple="multiple" accept="image/*" min="1" max="50"/>
+                <br>
+                
+                <button onclick="addimg('link',document.getElementById('img-link').value)">Add Link Image</button>
+                <button onclick="addimg('file')">Add File Image</button>
+
+
+                <br><br><br>
+                <button onclick="unprompt()">Close</button>
+            </div>
+        </div>
+
+        
+        <div id="tier-list">
+        </div>
+        <div id="controls">
+            <button onclick="add_tier(document.getElementById('newtier').value,document.getElementById('newcolor').value)">Add Tier</button>
+            <input title="tiernames" id="newtier" type="text"/>
+            <input title="tiercolor" id="newcolor" type="color"/>
+            <br>
+            <button title="Export" onclick="urlify()">Template as URL</button>
+            <button onclick="prompt_addition()">Add Icon</button>
+            <button onclick="makepng()">Export as Image</button>
+
+        </div>
+        
+        <br/><br/><br/>
+        
+        <div id="images" ondragover="allowDrop(event)" ondrop="drop_handler(event)">
+        </div>
+        <br><br><br>
+        <div id="img-output"><p>Image Output</p></div>
+
+    </body>
+    <!--<script src="./html2canvas.min.js"></script>-->
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script src="./script.js"></script>
+</html>
