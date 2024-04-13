@@ -6,25 +6,32 @@
         <link rel="stylesheet" href="./style.css" />
     </head>
     <body>
+        <button id="export-image" onclick="makepng()">Export as Image</button>
 
         <div id="adding_wrapper">
             <div id="additional_dialog">
-                <input title="img link" id="img-link" placeholder="Link to image"/>
-                <input title="IMG src" id="img-file" type="file" multiple="multiple" accept="image/*" min="1" max="50"/>
+                <input title="img link" id="img-link" type="url" placeholder="Link to image (one at a time)"/><br><br>
+                <input title="IMG src" id="img-file" type="file" multiple="multiple" accept="image/*"/>
                 <br>
                 
-                <button onclick="addimg('link',document.getElementById('img-link').value)">Add Link Image</button>
-                <button onclick="addimg('file')">Add File Image</button>
+                
+                <div id="disclaimer">
+                    Images imported from your pc cannot be used when sharing templates
+                </div>
 
 
                 <br><br><br>
+                <button onclick="addimg('input')">Add Images</button>
                 <button onclick="unprompt()">Close</button>
             </div>
         </div>
+        
 
         
         <div id="tier-list">
         </div>
+        <br/><br/>
+
         <div id="controls">
             <button onclick="add_tier(document.getElementById('newtier').value,document.getElementById('newcolor').value)">Add Tier</button>
             <input title="tiernames" id="newtier" type="text"/>
@@ -32,19 +39,18 @@
             <br>
             <button title="Export" onclick="urlify()">Template as URL</button>
             <button onclick="prompt_addition()">Add Icon</button>
-            <button onclick="makepng()">Export as Image</button>
-
         </div>
+        
         
         <br/><br/><br/>
         
         <div id="images" ondragover="allowDrop(event)" ondrop="drop_handler(event)">
         </div>
         <br><br><br>
-        <div id="img-output"><p>Image Output</p></div>
+        <div id="img-output"><p></p></div>
 
     </body>
-    <!--<script src="./html2canvas.min.js"></script>-->
+    
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <script src="./script.js"></script>
 </html>

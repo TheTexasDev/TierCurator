@@ -21,6 +21,21 @@ body {
     margin-right: auto;
 }
 
+#export-image {
+    margin: auto;
+    position: fixed;
+    display: none;
+}
+
+#controls{
+    width: -moz-fit-content;
+    width: fit-content;
+    margin: auto;
+    padding: 5px;
+    border: 2px solid gray;
+    border-radius: 10px;
+}
+
 
 .tier{
     min-height: calc(var(--boxes) - var(--borders));
@@ -72,11 +87,6 @@ img {
     width: var(--boxes);
 }
 
-#controls{
-    width: -moz-fit-content;
-    width: fit-content;
-    margin: auto;
-}
 
 #adding_wrapper{
     position: fixed;
@@ -101,4 +111,9 @@ img {
     inset: 0px;
     margin: auto;
     margin-left: 500px;*/
+}
+
+
+#img-link {
+    width: 100%;
 }

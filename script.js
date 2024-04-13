@@ -76,7 +76,7 @@ function rescale_tiers(){
         document.documentElement.style.setProperty('--boxes','100px')
     }
 
-    let mathed = ((Math.floor(1000/Number(document.documentElement.style.getPropertyValue("--boxes").split("px")[0]))-1)*Number(document.documentElement.style.getPropertyValue("--boxes").split("px")[0])+2).toString()+"px"
+    let mathed = ((Math.floor(1300/Number(document.documentElement.style.getPropertyValue("--boxes").split("px")[0]))-1)*Number(document.documentElement.style.getPropertyValue("--boxes").split("px")[0])+2).toString()+"px"
     document.documentElement.style.setProperty("--tierwidth",mathed)
 }
 
@@ -95,7 +95,7 @@ function read_url(){
     for (var j = 0; j < image_links.length; j++){
         addimg('link',image_links[j])
     }
-    images_for_linking = image_links
+    //images_for_linking = image_links
 
 
     let tiers = []
@@ -111,6 +111,11 @@ function read_url(){
     console.log(`Got ${tiers.length} tiers from URL`,tiers)
     if (tiers.length > 0) {
         default_tiers = tiers
+    }
+
+
+    if (params.includes("&tcfixed")){
+        document.getElementById("controls").remove()
     }
 
 }
@@ -154,7 +159,7 @@ function unprompt(){
 
 
 
-function addimg(style,src){
+async function addimg(style,src){
 
     image_count += 1
     let newIMG = document.createElement("img")
@@ -166,34 +171,66 @@ function addimg(style,src){
     //newIMG.setAttribute("ondblclick",`addimg('link','${src}');document.getElementById('${newIMG.id}').remove()`)
 
     if(style == "link"){
-        loadImageFromBlob('https://corsproxy.io/?'+encodeURIComponent(src)).then(value => {
+
+        await loadImageFromBlob('https://corsproxy.io/?'+encodeURIComponent(src)).then((value) => {
             newIMG.setAttribute("src",value.src)
         })
 
-        images_for_linking.push(document.getElementById("img-link").value)
-        document.getElementById("img-link").value = ""
+
+        images_for_linking.push(src)
+
+
+    }else if(style == "source"){
+        newIMG.setAttribute("src",src)
+
+
     }else if(style=="file"){
-        
         for(var i = 0; i < document.getElementById("img-file").files.length; i++){
             var reader = new FileReader();
             reader.onload = function(e) {
                 const imageDataUrl = e.target.result;
-                addimg("url",imageDataUrl);
+                addimg("source",imageDataUrl);
             };      
             //console.log(document.getElementById("img-file").files[i])
             reader.readAsDataURL(document.getElementById("img-file").files[i])
         }
-        
+        return
+
+
+    }else if (style == "input"){
+        if (document.getElementById("img-link").value != ""){
+            //console.log(document.getElementById("img-link").value)
+            addimg('link',document.getElementById("img-link").value)
+            document.getElementById("img-link").value = ""
+        }
+        if (document.getElementById("img-file").files.length > 0){
+            //console.log(document.getElementById("img-file").files.length)
+            addimg("file")
+            document.getElementById("img-file").value = ""
+        }
+
         return
     }
 
-    
     unprompt()
     imgeList.append(newIMG)
 }
 
 
 
+
+document.getElementById("tier-list").addEventListener("contextmenu",e => {
+    e.preventDefault()
+    let contextmenu = document.getElementById("export-image")
+    //alert(e.clientX)
+    contextmenu.style.display = "block"
+    contextmenu.style.marginLeft = e.clientX-10+"px"
+    contextmenu.style.marginTop = e.clientY-10+"px"
+})
+
+document.getElementById("export-image").addEventListener("mouseleave", e=> {
+    document.getElementById("export-image").style.display = "none"
+})
 
 
 async function loadImageFromBlob(url) {
@@ -212,29 +249,13 @@ async function loadImageFromBlob(url) {
           })
           image.addEventListener('error', reject);
   
+        }).catch(error =>{
+            throw error;
         })
   
-     })
-  
-  }
-
-function url2base(img){
-    //let invisimage = document.createElement("img")
-    //let loader = loadImageFromBlob(img)
-    //console.log(loader)
-    //invisimage.setAttribute("src",loader)
-    //document.body.append(invisimage)
-    /*console.log(invisimage)
-    var canvo = document.createElement("canvas");
-    canvo.width = invisimage.width;
-    canvo.height = invisimage.height;
-    var ctx = canvo.getContext("2d");
-    ctx.drawImage(invisimage, 0, 0);
-    var dataURL = canvo.toDataURL("image/png");
-    console.log(dataURL)
-    return dataURL.replace(/^data:image\/?[A-z]*;base64,/,'');*/
-    return img
+    })
 }
+
 
 function urlify(){
     let full = window.location.href
@@ -263,30 +284,14 @@ Element.prototype.remove = function() {
 
 
 function makepng(){
-   /* 
-    I am attempting to be able to convert a tier list into an image and have run into an issue
-    when using html2canvas. The tier titles, 'tier-title-text' are all moved back by one. So the first tier is the second one and the last tier has no name 
-    
-    Method A: Force Positioning
-    - Move the letters down a peg. I used fixed positioning and scrolling back to top of page to achieve this. Bit janky but it works. 
-    - Everything is returned to position after the fact
-
-    Method B: Push Tiers
-    - Go through all the tiers and move the title to the next one down.
-    */ 
-
-
-
-
-
-    /* Method A Pre-image */
-    
-    
+   
+    document.documentElement.style.setProperty("--boxes","200px")
     let boxes = Number(document.documentElement.style.getPropertyValue('--boxes').split("px")[0])
     let counts = document.getElementsByClassName("tier-title-text")
+
     for (var x = 0; x < counts.length; x++) {
         counts[x].style.position = `fixed`
-        let offset = Math.round(counts[x].parentElement.offsetHeight/100)*100
+        let offset = Math.round(counts[x].parentElement.offsetHeight/boxes)*boxes
         console.log(counts[x].innerText,offset)
         if(offset == boxes){
             offset *= 2
@@ -298,60 +303,26 @@ function makepng(){
 
     window.scrollTo(0,0)
     
-    
-
-    /* Method B Pre-image */
-    /*
-    let faketier = document.createElement("div")
-    faketier.className = "tier"
-    faketier.style.setProperty("margin-bottom",`calc(var(--boxes))`);
-    faketier.style.setProperty("position",`absolute`);
-    let tierTitle = document.createElement("div")
-    tierTitle.className = "tier-title"
-    tierTitle.style.border="none"
-    let lieTierTitle = document.createElement("div")
-    lieTierTitle.className = "tier-title-text"
-    let tierContent = document.createElement("div")
-    tierContent.className = "tier-content"
-    tierContent.style = "border:none;"
-    
-    tierTitle.append(lieTierTitle)
-    faketier.append(tierTitle)
-    faketier.append(tierContent)
-    tierList.append(faketier)
-
-    let counts = document.getElementsByClassName("tier-title-text")
-    console.log(counts)
-    for (var x = counts.length-1; x > 0; x--) {
-        counts[x].innerText = counts[x-1].innerText
-    }*/
-    
-
+    //document.documentElement.style.setProperty("--tierwidth","1920px")
     tierList.style.height = "fit-content"
     tierList.style.overflowY = "hidden"
     html2canvas(tierList,{allowTaint: true, useCORs: true}).then(canvas => {
-        let image = canvas.toDataURL()
+        let image = canvas.toDataURL("jpg")
         
-        document.getElementById("img-output").appendChild(canvas)
-        document.getElementById("img-output").removeChild(document.getElementById("img-output").firstChild)
+        window.open(image,`_blank`)
+        //document.getElementById("img-output").appendChild(canvas)
+        //document.getElementById("img-output").removeChild(document.getElementById("img-output").firstChild)
+    }).then(() => {
+        rescale_tiers()
     })
+
+    //rescale_tiers()
     //tierList.style.height = ""
     //tierList.style.overflowY = "scroll"
-
-    /* Method B Post-image */
-    /*
-    for (var x = 0; x < counts.length-1; x++) {
-        counts[x].innerText = counts[x+1].innerText
-    }
-    tierList.removeChild(tierList.lastChild)*/
-
-    
-    /* Method A Post-image */
     
     for (var x = 0; x < counts.length; x++) {
         counts[x].style.position = ``
         counts[x].style.paddingTop = `0`
     }
-    
     
 }
