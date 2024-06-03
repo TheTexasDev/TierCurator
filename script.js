@@ -14,6 +14,7 @@ let tierList = document.getElementById("tier-list")
 let imgeList = document.getElementById("images")
 let images_for_linking = []
 
+
 function add_tier(title,clr){
 
     let newTier = document.createElement("div")
@@ -39,6 +40,9 @@ function add_tier(title,clr){
     newTier.append(tierTitle)
     newTier.append(tierContent)
     tierList.appendChild(newTier)
+
+    document.getElementById('newtier').value = ""
+    document.getElementById('newcolor').value = ""
 
     tiers_for_linking.push([title,clr,tiers_for_linking.length])
     rescale_tiers()
@@ -85,7 +89,6 @@ function read_url(){
     if (url == ""){return}
     let params = url.slice(url.indexOf("?"),url.length)
 
-
     let image_links = []
     while(params.indexOf("&tcimg=") > -1){
         image_links.push(params.split("&tcimg=")[1].split("&tc")[0])
@@ -117,6 +120,8 @@ function read_url(){
     if (params.includes("&tcfixed")){
         document.getElementById("controls").remove()
     }
+
+    
 
 }
 
@@ -159,7 +164,7 @@ function unprompt(){
 
 
 
-async function addimg(style,src){
+async function addimg(style,src,hover){
 
     image_count += 1
     let newIMG = document.createElement("img")
@@ -168,10 +173,10 @@ async function addimg(style,src){
     newIMG.setAttribute("draggable",'true')
     newIMG.setAttribute("ondrop",'drop_handler(event)')
     newIMG.setAttribute("referrerpolicy","no-referrer")
+    if (hover){ newIMG.setAttribute("title",hover.toString())}
     //newIMG.setAttribute("ondblclick",`addimg('link','${src}');document.getElementById('${newIMG.id}').remove()`)
 
     if(style == "link"){
-
         await loadImageFromBlob('https://corsproxy.io/?'+encodeURIComponent(src)).then((value) => {
             newIMG.setAttribute("src",value.src)
         })
@@ -272,8 +277,24 @@ function urlify(){
         url_additions += "&tcimg="+images_for_linking[i]
     }
 
-    document.getElementById("controls").innerHTML += "<br>"
-    document.getElementById("controls").innerHTML += prefix+"?"+url_additions+"&tc"
+    //"&tcfixed"
+
+   
+    if (document.getElementById("allow_editing").checked){
+        url_additions += "&tc"
+    }else{
+        url_additions += "&tcfixed"
+    }
+
+    //document.getElementById("controls").innerHTML += "<br>"
+    //document.getElementById("controls").innerHTML += prefix+"?"+url_additions+"&tc"
+    try {
+        navigator.clipboard.writeText(prefix+"?"+url_additions);
+        console.log('Content copied to clipboard');
+        alert("Copied Permalink to clipboard!")
+    } catch (err) {
+        console.error('Failed to copy: ', err);
+    }
 }
 
 
@@ -286,6 +307,7 @@ Element.prototype.remove = function() {
 function makepng(){
    
     document.documentElement.style.setProperty("--boxes","200px")
+    let max_in_row = 12
     let boxes = Number(document.documentElement.style.getPropertyValue('--boxes').split("px")[0])
     let counts = document.getElementsByClassName("tier-title-text")
 
@@ -305,6 +327,7 @@ function makepng(){
     
     //document.documentElement.style.setProperty("--tierwidth","1920px")
     tierList.style.height = "fit-content"
+    tierList.style.minWidth = boxes*max_in_row+10+"px"
     tierList.style.overflowY = "hidden"
     html2canvas(tierList,{allowTaint: true, useCORs: true}).then(canvas => {
         let image = canvas.toDataURL("jpg")
@@ -317,7 +340,7 @@ function makepng(){
     })
 
     //rescale_tiers()
-    //tierList.style.height = ""
+    tierList.style.minWidth = "400px"
     //tierList.style.overflowY = "scroll"
     
     for (var x = 0; x < counts.length; x++) {
