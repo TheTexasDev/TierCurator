@@ -41,8 +41,12 @@ function add_tier(title,clr){
     newTier.append(tierContent)
     tierList.appendChild(newTier)
 
-    document.getElementById('newtier').value = ""
-    document.getElementById('newcolor').value = ""
+    try {
+        document.getElementById('newtier').value = ""
+        document.getElementById('newcolor').value = ""
+    } catch {
+        console.log("Controls Disabled");
+    }
 
     tiers_for_linking.push([title,clr,tiers_for_linking.length])
     rescale_tiers()
