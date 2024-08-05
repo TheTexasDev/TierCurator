@@ -8,10 +8,14 @@ body {
     --tierwidth: 1000px;
 }
 
+#main-content {
+    width: 80%;
+}
+
 #tier-list {
     border: var(--borders) solid gray;
     max-width: var(--tierwidth);
-    min-width: 400px;
+    /*min-width: 400px;
     /*height: 600px;*/
     height: -moz-fit-content;
     height: fit-content;
@@ -19,6 +23,26 @@ body {
     overflow-x: hidden;
     margin-left: auto;
     margin-right: auto;
+}
+
+#side-bar1{
+    border: var(--borders) solid gray;
+    position: fixed;
+    width: 19%;
+    bottom: 0;
+    right: 0;
+    top: 0;
+    padding: 4px;
+    color: rgb(220,220,220);
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-size: smaller;
+    overflow-y: scroll;
+}
+
+@media only screen and (max-width: 1000px){
+    #side-bar1 {
+        display: none;
+    }
 }
 
 #export-image {
@@ -36,6 +60,21 @@ body {
     border-radius: 10px;
 }
 
+#controls, #controls > button, #controls > input, #additional_dialog, #additional_dialog > input, #additional_dialog > button, #additional_dialog > select, #additional_dialog > select > option {
+    font-family: monospace;
+}
+
+#newtier {
+    width: 120px;
+    top: 0;
+}
+
+#newcolor {
+    width: 40px;
+    height: 20px;
+    border: none;
+    border-radius: 3px;
+}
 
 .tier{
     min-height: calc(var(--boxes) - var(--borders));
@@ -70,6 +109,10 @@ body {
     margin: auto !important;
     font-family: Verdana, Geneva, Tahoma, sans-serif;
     font-size: larger;
+    
+    -webkit-user-select: none; /* Safari */
+    -ms-user-select: none; /* IE 10 and IE 11 */
+    user-select: none; /* Standard syntax */
 }
 
 #images{
@@ -82,16 +125,28 @@ body {
     padding: 2px;
 }
 
-img {
+.img_square {
     height: var(--boxes);
     width: var(--boxes);
+}
+
+.img_circle {
+    height: var(--boxes);
+    width: var(--boxes);
+    border-radius: 100%;
+}
+
+.img_freeform {
+    height: var(--boxes);
+    width: auto;
 }
 
 
 #adding_wrapper{
     position: fixed;
     display: none;
-    margin: auto;
+    left: 0;
+    top: 0;
     width: 100%;
     height: 100%;
     background-color: rgba(0,0,0,0.5);
