@@ -8,15 +8,44 @@ var default_tiers = [
     ["F","#da5e3f",5]
 ]
 
-let tiers_for_linking = []
+
 
 let tierList = document.getElementById("tier-list")
 let imgeList = document.getElementById("images")
+
+let tiers_for_linking = []
 let images_for_linking = []
 
 
-function add_tier(title,clr){
+function create_new_tier(){
+    let tier_name = document.getElementById('newtier').value
+    let color = document.getElementById('newcolor').value
+    if (tier_name.length < 1){
+        alert("Tier has no title")
+        return
+    }
+    
 
+    let colorR = color.slice(1,3)
+    let colorG = color.slice(3,5)
+    let colorB = color.slice(5,7)
+    if (parseInt(colorR,16) <= 30 && parseInt(colorG,16) <= 30 && parseInt(colorB,16) <= 30){
+        if ((colorR >= colorG && colorR > colorB) || (colorR > colorG && colorR >= colorB)){
+            color = "#"+(50).toString(16)+colorG+colorB
+        }else if ((colorG >= colorR && colorG > colorB) || (colorG > colorR && colorG >= colorB)){
+            color = "#"+colorR+(50).toString(16)+colorB
+        }else if ((colorB >= colorR && colorB > colorG) || (colorB > colorR && colorB >= colorG)){
+            color = "#"+colorR+colorG+(50).toString(16)
+        }else{
+            color = "#282828"
+        }
+    }
+
+    
+    add_tier(tier_name,color)
+}
+
+function add_tier(title,clr){
     let newTier = document.createElement("div")
     newTier.className = "tier"
     newTier.setAttribute("ondragover",'allowDrop(event)')
@@ -41,11 +70,12 @@ function add_tier(title,clr){
     newTier.append(tierContent)
     tierList.appendChild(newTier)
 
-    try {
+    try{
+        
         document.getElementById('newtier').value = ""
         document.getElementById('newcolor').value = ""
-    } catch {
-        console.log("Controls Disabled");
+    }catch{
+        console.log("controls disabled")
     }
 
     tiers_for_linking.push([title,clr,tiers_for_linking.length])
@@ -53,6 +83,10 @@ function add_tier(title,clr){
 }
 
 function rmv_tier(title){
+    if (window.location.search.includes("&tcfixed")){
+        return; // controls disabled
+    }
+
     let match_index = 0;
     for(var j = 0; j < tierList.children.length; j++){
         if(tierList.children[j].children[0].children[0].innerText === title){
@@ -72,6 +106,7 @@ function rmv_tier(title){
 
     rescale_tiers()
 }
+
 
 function rescale_tiers(){
     if(tierList.children.length >= 9){
@@ -94,15 +129,20 @@ function read_url(){
     let params = url.slice(url.indexOf("?"),url.length)
 
     let image_links = []
+    let image_shape = "square"
+
     while(params.indexOf("&tcimg=") > -1){
-        image_links.push(params.split("&tcimg=")[1].split("&tc")[0])
-        params = params.replace(`&tcimg=${image_links[image_links.length-1]}`,'')
+        tcimg = params.split("&tcimg=")[1].split("&tc")[0]
+
+        if (tcimg.includes("&sh=")){
+            image_shape = tcimg.split("&sh=")[1]
+        }
+        image_links.push(tcimg.split("&sh=")[0])
+        params = params.replace(`&tcimg=${tcimg}`,'')
+        addimg('link',tcimg.split("&sh=")[0],image_shape)
+
     }
     console.log(`Got ${image_links.length} images from URL`,image_links)
-    for (var j = 0; j < image_links.length; j++){
-        addimg('link',image_links[j])
-    }
-    //images_for_linking = image_links
 
 
     let tiers = []
@@ -166,19 +206,52 @@ function unprompt(){
     document.getElementById("adding_wrapper").style.display = "none"
 }
 
+function reset_tier_list(){
+    const img_tag_count = Array.prototype.slice.call( document.getElementsByTagName("img") )
+    //console.log(img_tag_count)
+
+    for (let img_deleter = 0; img_deleter < img_tag_count.length; img_deleter++){
+        let thisone = img_tag_count[img_deleter]
+        if (thisone.parentElement.className == "tier-content"){
+            rmvimg(thisone.id)
+            //thisone.dispatchEvent(new MouseEvent("dblclick"))
+        }
+    }
+}
 
 
-async function addimg(style,src,hover){
-
+async function addimg(style,src,aspect){
+    aspect = aspect || "square"
+    
     image_count += 1
     let newIMG = document.createElement("img")
+
+    /*
+    for (let i = 0; i < image_count; i++){
+        if(document.getElementById("img"+i)){
+            console.log(i,document.getElementById("img"+i))
+        }else{
+            console.log(i,"Does not Exist")
+            newIMG.id = "img"+i
+            break
+        }
+    }*/
+
     newIMG.id = "img"+image_count
+    
     newIMG.setAttribute("ondragstart",'drag(event)')
     newIMG.setAttribute("draggable",'true')
     newIMG.setAttribute("ondrop",'drop_handler(event)')
     newIMG.setAttribute("referrerpolicy","no-referrer")
-    if (hover){ newIMG.setAttribute("title",hover.toString())}
-    //newIMG.setAttribute("ondblclick",`addimg('link','${src}');document.getElementById('${newIMG.id}').remove()`)
+    newIMG.setAttribute("ondblclick","rmvimg('"+newIMG.id+"')")
+    if (aspect == "freeform"){ 
+        newIMG.setAttribute("class","img_freeform")
+    }else if(aspect == "circle"){
+        newIMG.setAttribute("class","img_circle")
+    }else{
+        newIMG.setAttribute("class","img_square") 
+    }
+    
 
     if(style == "link"){
         await loadImageFromBlob('https://corsproxy.io/?'+encodeURIComponent(src)).then((value) => {
@@ -186,7 +259,8 @@ async function addimg(style,src,hover){
         })
 
 
-        images_for_linking.push(src)
+        newIMG.setAttribute("data-origin-link",src)
+        images_for_linking.push(src+"&sh="+aspect)
 
 
     }else if(style == "source"){
@@ -209,7 +283,7 @@ async function addimg(style,src,hover){
     }else if (style == "input"){
         if (document.getElementById("img-link").value != ""){
             //console.log(document.getElementById("img-link").value)
-            addimg('link',document.getElementById("img-link").value)
+            addimg('link',document.getElementById("img-link").value,document.getElementById("image_aspect_picker").value)
             document.getElementById("img-link").value = ""
         }
         if (document.getElementById("img-file").files.length > 0){
@@ -225,7 +299,28 @@ async function addimg(style,src,hover){
     imgeList.append(newIMG)
 }
 
+function rmvimg(id){
+    let curn_image = document.getElementById(id)
+    let imageparent = curn_image.parentElement
 
+    if(imageparent.className == "image_list"){
+        if(curn_image.hasAttribute("data-origin-link")){
+            let found_you = images_for_linking.indexOf(curn_image.getAttribute("data-origin-link"))
+            if (found_you > -1){
+                images_for_linking.splice(found_you,1)
+            }
+        }
+        imageparent.removeChild(curn_image)
+
+    }else{
+        if(curn_image.hasAttribute("data-origin-link")){
+            addimg("link",curn_image.getAttribute("data-origin-link"),document.getElementById(id).className.split("_")[1])
+        }else{
+            addimg("source",curn_image.getAttribute("src"),document.getElementById(id).className.split("_")[1])
+        }
+        imageparent.removeChild(curn_image)
+    }
+}
 
 
 document.getElementById("tier-list").addEventListener("contextmenu",e => {
@@ -240,6 +335,7 @@ document.getElementById("tier-list").addEventListener("contextmenu",e => {
 document.getElementById("export-image").addEventListener("mouseleave", e=> {
     document.getElementById("export-image").style.display = "none"
 })
+
 
 
 async function loadImageFromBlob(url) {
@@ -315,6 +411,10 @@ function makepng(){
     let boxes = Number(document.documentElement.style.getPropertyValue('--boxes').split("px")[0])
     let counts = document.getElementsByClassName("tier-title-text")
 
+    /*
+    Sometimes the Tier Titles are pushed down one tier and leave a blank one on top.
+    Or double-tall rows will have the letter not in the middle.
+    This is commented out right now because it works perfectly without it. Still here incase it breaks again for magic code reasons.
     for (var x = 0; x < counts.length; x++) {
         counts[x].style.position = `fixed`
         let offset = Math.round(counts[x].parentElement.offsetHeight/boxes)*boxes
@@ -325,7 +425,7 @@ function makepng(){
             offset = offset/1.5
         }
         counts[x].style.setProperty("padding-top",`${offset}px`)
-    }
+    }*/
 
     window.scrollTo(0,0)
     
