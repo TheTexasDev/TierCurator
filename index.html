@@ -18,37 +18,83 @@
                 <div id="disclaimer">
                     Images imported from your pc cannot be used when sharing templates
                 </div>
+                
+                <select id="image_aspect_picker" title="Aspect Ratio">
+                    <option value="square">1:1 (Square)</option>
+                    <option value="circle">1:1 (Circle)</option>
+                    <option selected="selected" value="freeform">X:Y (Freeform)</option>
+                </select>
 
 
                 <br><br><br>
                 <button onclick="addimg('input')">Add Images</button>
-                <button onclick="unprompt()">Close</button>
+                <button onclick="unprompt()" id="close_additional">Close</button>
             </div>
         </div>
         
+        
+        <div id="main-content">
+            <div id="tier-list">
+            </div>
+            <br/><br/>
 
-        
-        <div id="tier-list">
-        </div>
-        <br/><br/>
 
-        <div id="controls">
-            <button onclick="add_tier(document.getElementById('newtier').value,document.getElementById('newcolor').value)">Add Tier</button>
-            <input title="tiernames" id="newtier" type="text"/>
-            <input title="tiercolor" id="newcolor" type="color"/>
-            <br>
-            <button title="Export" onclick="urlify()">Template as URL</button>
-            <input title="Allow Edits" type="checkbox" default="true" id="allow_editing"><span style="color:white;">Allow Changes</span></input>
-            <button onclick="prompt_addition()">Add Icon</button>
+            <div id="controls">
+                <button onclick="create_new_tier()" id="addtier">Add Tier</button>
+                <input title="tiercolor" id="newcolor" type="color"/>
+                <input title="tiernames" id="newtier" type="text" placeholder="A Tier"/>
+                <br>
+                <button onclick="prompt_addition()">Add Icon</button>
+                <button onclick="reset_tier_list()">Reset List</button>
+                <br><br>
+                <button title="Export" onclick="urlify()">Template as URL</button>
+                <input title="Allow Edits" type="checkbox" checked id="allow_editing"><span style="color:white;">Allow Changes</span></input>
+            </div>
+            
+            
+            <br/><br/><br/>
+            
+            <div id="images" class="image_list" ondragover="allowDrop(event)" ondrop="drop_handler(event)">
+            </div>
+            <br><br><br>
+            <div id="img-output"><p></p></div>
         </div>
-        
-        
-        <br/><br/><br/>
-        
-        <div id="images" ondragover="allowDrop(event)" ondrop="drop_handler(event)">
+
+        <div id="side-bar1">
+            <p>
+                <b>Right click the tier list to export it as image</b>
+            </p>
+
+            <p>
+                <b>Double click</b> a tier's colorful title to remove it.
+                Likewise, double click an Icon to remove it. 
+                If an Icon is removed while in the tier list, it will be <b>moved</b> to the unused box.<br>
+                <b>Double click it again</b> while in the unused box to remove it completely from the page and the template.
+            </p>
+
+            <p>
+                To create a new tier simply <b>press Add Tier</b> and it will use the selected color from the option next to it
+                you also <i>need a tier name</i> by typing it into the textbox.
+            </p>
+
+            <p>
+                When adding an Icon, you can use images from your PC files, or a web link.<br>
+                You can <i>choose what shape</i> the image is shown as on the tier list.
+                <b>Square</b> will squish the image into a square.
+                <b>Circle</b> will squish the image into a square, but round the corners.
+                <b>Freeform</b> will shorten the height of the image to fit, but will keep the aspect ratio of the image.
+            </p>
+
+            <p>
+                Exporting a tier list as URL will create a permalink that can be shared with others. The link will lead them back to this site using the same tiers and images you provided.<br>
+                Due to limitations <i>only web link images can be saved to a template</i><br>
+                Optionally, you can toggle if whoever uses the permalink can modify tiers or Icon list by clicking the <b>Allow Changes</b> option
+            </p>
+
+            <div id="templates">
+
+            </div>
         </div>
-        <br><br><br>
-        <div id="img-output"><p></p></div>
 
     </body>
     
