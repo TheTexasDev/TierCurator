@@ -1,8 +1,3 @@
-/**let compressedData = pako.gzip();
-console.log(compressedData.toString())
-let uncompress = pako.ungzip(compressedData,{to:"string"})
-console.log(uncompress)**/
-
 var image_count = 0
 var default_tiers = [
     ["S","#644cee",0],
@@ -180,14 +175,10 @@ function read_url(actually_do_it){
         default_tiers = tiers
     }
 
-
     if (params.includes("&tcfixed")){
         document.getElementById("controls").remove();
         allow_controls = false;
     }
-
-    
-
 }
 
 
@@ -334,13 +325,12 @@ function rmvimg(id){
     let imageparent = curn_image.parentElement
 
     if(imageparent.className == "image_list"){
+        if(!allow_controls){return}
         if(curn_image.hasAttribute("data-origin-link")){
             let stored_value = `${curn_image.getAttribute("data-origin-link")}&sh=${curn_image.className.split("_")[1]}`
             let found_you = images_for_linking.indexOf(stored_value)
             if (found_you > -1){
                 images_for_linking.splice(found_you,1)
-            }else{
-                console.log(stored_value,"NOT IN IMAGES")
             }
         }
         imageparent.removeChild(curn_image)
