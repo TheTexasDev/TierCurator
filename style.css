@@ -60,8 +60,13 @@ body {
     border-radius: 10px;
 }
 
-#controls, #controls > button, #controls > input, #additional_dialog, #additional_dialog > input, #additional_dialog > button, #additional_dialog > select, #additional_dialog > select > option {
-    font-family: monospace;
+#controls, #additional_dialog, button, input, select, option {
+    font-family:monospace;
+}
+
+#dev_tools{
+    position: inherit;
+    bottom: 5px;
 }
 
 #newtier {
@@ -155,6 +160,7 @@ body {
 
 }
 #additional_dialog{
+    font-family: monospace;
     border: 5px solid white;
     border-radius: 20px;
     background-color: rgb(200,200,200);

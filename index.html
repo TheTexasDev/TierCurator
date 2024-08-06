@@ -10,7 +10,7 @@
 
         <div id="adding_wrapper">
             <div id="additional_dialog">
-                <input title="img link" id="img-link" type="url" placeholder="Link to image (one at a time)"/><br><br>
+                <textarea title="img link" id="img-link" type="url" placeholder="Link to image (one at a time)"></textarea><br><br>
                 <input title="IMG src" id="img-file" type="file" multiple="multiple" accept="image/*"/>
                 <br>
                 
@@ -61,6 +61,7 @@
         </div>
 
         <div id="side-bar1">
+            Version: 1.2
             <p>
                 <b>Right click the tier list to export it as image</b>
             </p>
@@ -91,13 +92,18 @@
                 Optionally, you can toggle if whoever uses the permalink can modify tiers or Icon list by clicking the <b>Allow Changes</b> option
             </p>
 
-            <div id="templates">
-
+            <div id="dev_tools">
+                <button onclick="dev_get_tiers()">Tier Data</button>
+                <button onclick="dev_get_icons()">Icon Data</button>
+                <br>
+                <button onclick="urlify('old')">Copy Raw Template</button>
+                <button onclick="urlify('new')">Copy Encoded Template</button>
             </div>
         </div>
 
     </body>
     
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/pako/1.0.3/pako.min.js"></script>
     <script src="./script.js"></script>
 </html>
