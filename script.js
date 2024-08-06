@@ -1,3 +1,8 @@
+/**let compressedData = pako.gzip();
+console.log(compressedData.toString())
+let uncompress = pako.ungzip(compressedData,{to:"string"})
+console.log(uncompress)**/
+
 var image_count = 0
 var default_tiers = [
     ["S","#644cee",0],
@@ -7,7 +12,7 @@ var default_tiers = [
     ["D","#ffc72c",4],
     ["F","#da5e3f",5]
 ]
-
+var allow_controls = true
 
 
 let tierList = document.getElementById("tier-list")
@@ -83,13 +88,18 @@ function add_tier(title,clr){
 }
 
 function rmv_tier(title){
-    if (window.location.search.includes("&tcfixed")){
+    if (!allow_controls){
         return; // controls disabled
     }
 
     let match_index = 0;
     for(var j = 0; j < tierList.children.length; j++){
         if(tierList.children[j].children[0].children[0].innerText === title){
+            let tier_icons = tierList.children[j].children[1].children
+            for(var i = 0; i < tier_icons.length; i++){
+                //console.log(tier_icons[i].id)
+                rmvimg(tier_icons[i].id)
+            }
             tierList.removeChild(tierList.children[j])
             match_index = j;
             break;
@@ -109,6 +119,7 @@ function rmv_tier(title){
 
 
 function rescale_tiers(){
+
     if(tierList.children.length >= 9){
         document.documentElement.style.setProperty('--boxes','70px')
     }else if(tierList.children.length >= 8){
@@ -123,10 +134,15 @@ function rescale_tiers(){
     document.documentElement.style.setProperty("--tierwidth",mathed)
 }
 
-function read_url(){
+function read_url(actually_do_it){
+    actually_do_it = actually_do_it || true
+
     let url = window.location.search
     if (url == ""){return}
-    let params = url.slice(url.indexOf("?"),url.length)
+    let params = url.slice(url.indexOf("?")+1,url.length)
+    //console.log(params)
+    params = pako.ungzip(params.split(","),{to:"string"})
+    //console.log(params)
 
     let image_links = []
     let image_shape = "square"
@@ -139,7 +155,11 @@ function read_url(){
         }
         image_links.push(tcimg.split("&sh=")[0])
         params = params.replace(`&tcimg=${tcimg}`,'')
-        addimg('link',tcimg.split("&sh=")[0],image_shape)
+        if(actually_do_it === true){
+            addimg('link',tcimg.split("&sh=")[0],image_shape)
+        }else{
+
+        }
 
     }
     console.log(`Got ${image_links.length} images from URL`,image_links)
@@ -162,7 +182,8 @@ function read_url(){
 
 
     if (params.includes("&tcfixed")){
-        document.getElementById("controls").remove()
+        document.getElementById("controls").remove();
+        allow_controls = false;
     }
 
     
@@ -175,6 +196,7 @@ read_url()
 for(var i = 0; i < default_tiers.length; i++){
     add_tier(default_tiers[i][0],default_tiers[i][1])
 }
+
 
 function allowDrop(eve){
     eve.preventDefault()
@@ -283,6 +305,14 @@ async function addimg(style,src,aspect){
     }else if (style == "input"){
         if (document.getElementById("img-link").value != ""){
             //console.log(document.getElementById("img-link").value)
+            if(document.getElementById("img-link").value.includes(",")){
+                let commas = document.getElementById("img-link").value.split(",");
+                for (var i = 0; i < commas.length; i++){
+                    addimg('link',commas[i],document.getElementById("image_aspect_picker").value)
+                }
+                document.getElementById("img-link").value = ""
+                return
+            }
             addimg('link',document.getElementById("img-link").value,document.getElementById("image_aspect_picker").value)
             document.getElementById("img-link").value = ""
         }
@@ -305,9 +335,12 @@ function rmvimg(id){
 
     if(imageparent.className == "image_list"){
         if(curn_image.hasAttribute("data-origin-link")){
-            let found_you = images_for_linking.indexOf(curn_image.getAttribute("data-origin-link"))
+            let stored_value = `${curn_image.getAttribute("data-origin-link")}&sh=${curn_image.className.split("_")[1]}`
+            let found_you = images_for_linking.indexOf(stored_value)
             if (found_you > -1){
                 images_for_linking.splice(found_you,1)
+            }else{
+                console.log(stored_value,"NOT IN IMAGES")
             }
         }
         imageparent.removeChild(curn_image)
@@ -362,7 +395,7 @@ async function loadImageFromBlob(url) {
 }
 
 
-function urlify(){
+function urlify(actually_do_it){
     let full = window.location.href
     prefix = (full+"?").split("?")[0]
     //console.log(prefix)
@@ -377,8 +410,6 @@ function urlify(){
         url_additions += "&tcimg="+images_for_linking[i]
     }
 
-    //"&tcfixed"
-
    
     if (document.getElementById("allow_editing").checked){
         url_additions += "&tc"
@@ -386,10 +417,30 @@ function urlify(){
         url_additions += "&tcfixed"
     }
 
+    const old_url = prefix+"?"+url_additions
+    const compressed = pako.gzip(url_additions.toString())
+
+    try{
+        if (actually_do_it == "old"){
+            navigator.clipboard.writeText(old_url);
+            alert("Copied decoded (old) url")
+            return
+        }else if (actually_do_it == "new"){
+            navigator.clipboard.writeText(prefix+"?"+compressed);
+            alert("Copied pako url")
+            return
+        }
+    } catch (err) {
+        console.error('Failed to copy: ', err);
+    }
+
+    /* A remnant of my original idea to leave the permalink as plaintext in the controls box. (which stretched it wayyy tf out) 
+    I keep it here to shame myself. */
     //document.getElementById("controls").innerHTML += "<br>"
     //document.getElementById("controls").innerHTML += prefix+"?"+url_additions+"&tc"
     try {
-        navigator.clipboard.writeText(prefix+"?"+url_additions);
+        
+        navigator.clipboard.writeText(prefix+"?"+compressed);
         console.log('Content copied to clipboard');
         alert("Copied Permalink to clipboard!")
     } catch (err) {
@@ -452,4 +503,25 @@ function makepng(){
         counts[x].style.paddingTop = `0`
     }
     
+}
+
+
+
+/* Texan's Pretend-Dev Tools */
+function dev_get_tiers(){
+    try {
+        navigator.clipboard.writeText(JSON.stringify(tiers_for_linking));
+        alert("Copied Tiers to clipboard")
+    } catch (err) {
+        console.error('Failed to copy: ', err);
+    }
+}
+
+function dev_get_icons(){
+    try {
+        navigator.clipboard.writeText(JSON.stringify(images_for_linking));
+        alert("Copied Tiers to clipboard")
+    } catch (err) {
+        console.error('Failed to copy: ', err);
+    }
 }
