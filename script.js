@@ -1,3 +1,8 @@
+/**let compressedData = pako.gzip();
+console.log(compressedData.toString())
+let uncompress = pako.ungzip(compressedData,{to:"string"})
+console.log(uncompress)**/
+
 var image_count = 0
 var default_tiers = [
     ["S","#644cee",0],
@@ -297,9 +302,9 @@ async function addimg(style,src,aspect){
         if (document.getElementById("img-link").value != ""){
             //console.log(document.getElementById("img-link").value)
             if(document.getElementById("img-link").value.includes(",")){
-                let commas = document.getElementById("img-link").value.split(",");
-                for (var i = 0; i < commas.length; i++){
-                    addimg('link',commas[i],document.getElementById("image_aspect_picker").value)
+                let linebreaks = document.getElementById("img-link").value.split("\n");
+                for (var i = 0; i < linebreaks.length; i++){
+                    addimg('link',linebreaks[i],document.getElementById("image_aspect_picker").value)
                 }
                 document.getElementById("img-link").value = ""
                 return
