@@ -242,7 +242,6 @@ function reset_tier_list(){
 async function addimg(style,src,aspect){
     aspect = aspect || "square"
     
-    image_count += 1
     let newIMG = document.createElement("img")
 
     /*
@@ -297,6 +296,7 @@ async function addimg(style,src,aspect){
 
         }else{
             try{
+                image_count += 1
                 await loadImageFromBlob(fetch_proxy+encodeURIComponent(src)).then((value) => {
                     newIMG.setAttribute("src",value.src)
                     image_loade += 1
@@ -315,15 +315,16 @@ async function addimg(style,src,aspect){
 
 
     }else if(style == "source"){
-        newIMG.setAttribute("src",src)
+        newIMG.setAttribute("src",src,aspect)
+        image_count += 1
+        image_loade += 1
 
-
-    }else if(style=="file"){
+    }else if(style == "file"){
         for(var i = 0; i < document.getElementById("img-file").files.length; i++){
             var reader = new FileReader();
             reader.onload = function(e) {
                 const imageDataUrl = e.target.result;
-                addimg("source",imageDataUrl);
+                addimg("source",imageDataUrl,document.getElementById("image_aspect_picker").value);
             };      
             //console.log(document.getElementById("img-file").files[i])
             reader.readAsDataURL(document.getElementById("img-file").files[i])

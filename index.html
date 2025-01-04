@@ -2,10 +2,20 @@
 <html lang="en">
     <head>
         <meta charset="utf-8">
+        <meta lang="en-us">
+        <meta name="description" content="TierCurator is a free website for making a tier list for anything and share them with your friends. Completely online, no account needed.">
+        <meta name="keywords" content="Tierlist, Tier List, Tier maker, Online"/>
+        <meta name="author" content="TheTexasDev"/>
+        <meta property="og:url" content="https://thetexasdev.github.io/TierCurator/"/>
+        <link rel="canonical" href="https://thetexasdev.github.io/TierCurator/"/>
+        <meta property="og:site_name" content="TierCurator"/>
+        <meta property="og:title" content="Free, online tier list maker"/>
+        <meta property="og:description" content="Make & share tier lists online for free."/>
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+
         <title>Tier Curator</title>
-        <link rel="stylesheet" href="./style.css" />
         <link rel="icon" type="image/x-icon" href="./fav.ico" />
+        <link rel="stylesheet" href="./style.css" />
     </head>
     <body>
         <button id="export-image" onclick="makepng()">Export as Image</button>
@@ -71,12 +81,13 @@
         </div>
 
         <div id="side-bar1">
-            Version: 1.3.0
+            Version: 1.3.1
             <p>
                 <b>Right click the tier list to export it as image</b>
             </p>
 
             <p>
+                Click the <b>Add Icon</b> button to start adding images.<br>
                 <b>Double click</b> a tier's colorful title to remove it.
                 Likewise, double click an Icon to remove it. 
                 If an Icon is removed while in the tier list, it will be <b>moved</b> to the unused box.<br>
@@ -106,7 +117,7 @@
                 <span>Image Counter: <span id="image-counter-loaded">0</span>/<span id="image-counter-fromlink">0</span></span></span><br>
                 <button onclick="dev_get_tiers()">Tier Data</button>
                 <button onclick="dev_get_icons()">Icon Data</button>
-                <a href="https://cash.app/$MoneyWormhole" target="_blank" rel="noopener"><button id="cashapplink">Donate?</button></a>
+                <a href="https://cash.app/$AnAverageFella" target="_blank" rel="noopener"><button id="cashapplink">Donate?</button></a>
                 <br>
                 <button onclick="urlify('old')">Copy Raw Template</button>
                 <button onclick="urlify('new')">Copy Encoded Template</button>
