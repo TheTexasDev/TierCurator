@@ -2,6 +2,7 @@
 <html lang="en">
     <head>
         <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>Tier Curator</title>
         <link rel="stylesheet" href="./style.css" />
         <link rel="icon" type="image/x-icon" href="./fav.ico" />
@@ -11,25 +12,31 @@
 
         <div id="adding_wrapper">
             <div id="additional_dialog">
-                <textarea title="img link" id="img-link" type="url" placeholder="Link to image (one at a time)"></textarea><br><br>
+                <button onclick="addimg('input')" id="add_image_button">Add Images</button>
+                <button onclick="unprompt()" id="close_additional">X</button>
+                <br><br>
+                <textarea title="img link" id="img-link" type="url" placeholder="Link to image(separate with new lines)"></textarea><br><br>
                 <input title="IMG src" id="img-file" type="file" multiple="multiple" accept="image/*"/>
-                <br>
-                
-                
-                <div id="disclaimer">
-                    Images imported from your pc cannot be used when sharing templates
-                </div>
-                
+
                 <select id="image_aspect_picker" title="Aspect Ratio">
                     <option value="square">1:1 (Square)</option>
                     <option value="circle">1:1 (Circle)</option>
                     <option selected="selected" value="freeform">X:Y (Freeform)</option>
                 </select>
 
+                <br>
+                <form>
+                    <input type="radio" name="proxy" id="use-proxy-none" value="noproxy" title="no proxy"/>
+                    <label for="use-proxy-non">No Proxy</label>
+                    <input type="radio" name="proxy" id="use-proxy-cors" value="corsproxy" title="corsproxy" checked/>
+                    <label for="use-proxy-cors">Use Corsproxy</label>
+                </form>
 
-                <br><br><br>
-                <button onclick="addimg('input')">Add Images</button>
-                <button onclick="unprompt()" id="close_additional">Close</button>
+                <br><br>
+                <div id="disclaimer">
+                    Images imported from your pc cannot be used when sharing templates.
+                    Try uploading them to an image hosting site and use the image link if you want to share it.
+                </div>
             </div>
         </div>
         
@@ -43,17 +50,19 @@
             <div id="controls">
                 <button onclick="create_new_tier()" id="addtier">Add Tier</button>
                 <input title="tiercolor" id="newcolor" type="color"/>
-                <input title="tiernames" id="newtier" type="text" placeholder="A Tier"/>
+                <input title="tiernames" id="newtier" type="text" placeholder="Tier Name"/>
                 <br>
                 <button onclick="prompt_addition()">Add Icon</button>
                 <button onclick="reset_tier_list()">Reset List</button>
                 <br><br>
                 <button title="Export" onclick="urlify()">Template as URL</button>
-                <input title="Allow Edits" type="checkbox" checked id="allow_editing"><span style="color:white;">Allow Changes</span></input>
+                <input title="Allow Edits" type="checkbox" id="allow_editing" checked/>
+                <label for="allow_editing">Allow Changes</label>
             </div>
             
             
             <br/><br/><br/>
+            
             
             <div id="images" class="image_list" ondragover="allowDrop(event)" ondrop="drop_handler(event)">
             </div>
@@ -62,7 +71,7 @@
         </div>
 
         <div id="side-bar1">
-            Version: 1.2
+            Version: 1.3.0
             <p>
                 <b>Right click the tier list to export it as image</b>
             </p>
@@ -94,8 +103,10 @@
             </p>
 
             <div id="dev_tools">
+                <span>Image Counter: <span id="image-counter-loaded">0</span>/<span id="image-counter-fromlink">0</span></span></span><br>
                 <button onclick="dev_get_tiers()">Tier Data</button>
                 <button onclick="dev_get_icons()">Icon Data</button>
+                <a href="https://cash.app/$MoneyWormhole" target="_blank" rel="noopener"><button id="cashapplink">Donate?</button></a>
                 <br>
                 <button onclick="urlify('old')">Copy Raw Template</button>
                 <button onclick="urlify('new')">Copy Encoded Template</button>

@@ -4,6 +4,7 @@ let uncompress = pako.ungzip(compressedData,{to:"string"})
 console.log(uncompress)**/
 
 var image_count = 0
+var image_loade = 0
 var default_tiers = [
     ["S","#644cee",0],
     ["A","#48a1ca",1],
@@ -256,7 +257,7 @@ async function addimg(style,src,aspect){
     }*/
 
     newIMG.id = "img"+image_count
-    
+    // Add attributes to the new image
     newIMG.setAttribute("ondragstart",'drag(event)')
     newIMG.setAttribute("draggable",'true')
     newIMG.setAttribute("ondrop",'drop_handler(event)')
@@ -272,9 +273,41 @@ async function addimg(style,src,aspect){
     
 
     if(style == "link"){
-        await loadImageFromBlob('https://corsproxy.io/?'+encodeURIComponent(src)).then((value) => {
-            newIMG.setAttribute("src",value.src)
-        })
+        let fetch_proxy = document.querySelector("input[name='proxy']:checked").value
+
+        if (fetch_proxy == "corsproxy"){
+            fetch_proxy = 'https://corsproxy.io/?url='
+
+        }else{
+            fetch_proxy = ''
+        }
+
+        if (src.includes("\n")){
+            // if line breaks are present then separate them and loop through each one
+            let individual_lines = src.split("\n")
+            for (const individual_link of individual_lines){
+                if (individual_link != ""){
+                    console.log(individual_link)
+                    addimg("link",individual_link,document.getElementById("image_aspect_picker").value)
+                }else{
+                    console.log("line is blank")
+                }
+            }
+            return;
+
+        }else{
+            try{
+                await loadImageFromBlob(fetch_proxy+encodeURIComponent(src)).then((value) => {
+                    newIMG.setAttribute("src",value.src)
+                    image_loade += 1
+                })
+            
+            }catch(e){
+                console.log(`Failed to find "${src}"`)
+                return
+            }
+
+        }
 
 
         newIMG.setAttribute("data-origin-link",src)
@@ -295,7 +328,8 @@ async function addimg(style,src,aspect){
             //console.log(document.getElementById("img-file").files[i])
             reader.readAsDataURL(document.getElementById("img-file").files[i])
         }
-        return
+
+        return;
 
 
     }else if (style == "input"){
@@ -317,12 +351,14 @@ async function addimg(style,src,aspect){
             addimg("file")
             document.getElementById("img-file").value = ""
         }
+        return;
 
-        return
     }
 
     unprompt()
     imgeList.append(newIMG)
+    document.getElementById("image-counter-loaded").innerText = image_loade
+    document.getElementById("image-counter-fromlink").innerText = image_count
 }
 
 function rmvimg(id){
@@ -383,7 +419,8 @@ async function loadImageFromBlob(url) {
           image.addEventListener('error', reject);
   
         }).catch(error =>{
-            throw error;
+            console.log(`Cannot resolve link "${url}"`)
+            return false;
         })
   
     })

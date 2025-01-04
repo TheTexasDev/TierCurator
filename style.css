@@ -60,8 +60,13 @@ body {
     border-radius: 10px;
 }
 
-#controls, #additional_dialog, button, input, select, option {
-    font-family:monospace;
+#img-file, #controls, #additional_dialog, button, input, select, option {
+    border-radius: 0;
+    font-family: monospace;
+}
+
+label[for=allow_editing] {
+    color: white;
 }
 
 #dev_tools{
@@ -147,7 +152,7 @@ body {
 }
 
 
-#adding_wrapper{
+#adding_wrapper {
     position: fixed;
     display: none;
     left: 0;
@@ -159,22 +164,45 @@ body {
     align-items: center;
 
 }
-#additional_dialog{
+#additional_dialog {
     font-family: monospace;
     border: 5px solid white;
-    border-radius: 20px;
+    border-radius: 2px;
     background-color: rgb(200,200,200);
     padding: 20px;
     width: 450px;
     height: 250px;
+    overflow-y: scroll;
 
     /*
     inset: 0px;
     margin: auto;
     margin-left: 500px;*/
 }
+#close_additional {
+    float: right;
+    margin-top: -1rem;
+}
 
+#add_image_button {
+    float: left;
+    margin-top: -1rem;
+}
 
 #img-link {
-    width: 100%;
+    width: 99%;
+    resize: vertical;
+}
+
+#cashapplink {
+    font-family: monospace;
+    padding: 3px;
+    background-color: lime;
+    border-color: darkgreen;
+    border-radius: 0;
+}
+
+#cashapplink:hover {
+    background-color: limegreen;
+    border-color: darkgreen;
 }
