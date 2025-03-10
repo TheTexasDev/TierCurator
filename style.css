@@ -43,12 +43,6 @@ body {
     #side-bar1 {
         display: none;
     }
-
-    #export-image_mobile{
-        display: block;
-        margin-right: auto;
-        margin-left: auto;
-    }
 }
 
 #export-image {
