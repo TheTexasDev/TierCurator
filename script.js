@@ -182,7 +182,9 @@ function read_url(actually_do_it){
     }
 
     if (params.includes("&tcfixed")){
-        document.getElementById("controls").remove();
+        document.getElementById("controls-modifiers").remove();
+        document.getElementById("allow_editing").checked = false;
+        document.getElementById("allow_editing").disabled = true;
         allow_controls = false;
     }
 }

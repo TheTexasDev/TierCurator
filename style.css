@@ -43,6 +43,12 @@ body {
     #side-bar1 {
         display: none;
     }
+
+    #export-image_mobile{
+        display: block;
+        margin-right: auto;
+        margin-left: auto;
+    }
 }
 
 #export-image {
@@ -58,6 +64,7 @@ body {
     padding: 5px;
     border: 2px solid gray;
     border-radius: 10px;
+    line-height: 25px;
 }
 
 #img-file, #controls, #additional_dialog, button, input, select, option {

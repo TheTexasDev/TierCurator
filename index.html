@@ -58,13 +58,16 @@
 
 
             <div id="controls">
-                <button onclick="create_new_tier()" id="addtier">Add Tier</button>
-                <input title="tiercolor" id="newcolor" type="color"/>
-                <input title="tiernames" id="newtier" type="text" placeholder="Tier Name"/>
-                <br>
-                <button onclick="prompt_addition()">Add Icon</button>
-                <button onclick="reset_tier_list()">Reset List</button>
-                <br><br>
+                <div id="controls-modifiers">
+                    <input title="tiercolor" id="newcolor" type="color"/>
+                    <input title="tiernames" id="newtier" type="text" placeholder="Tier Name"/>
+                    <button onclick="create_new_tier()" id="addtier">Add Tier</button>
+                    <br>
+                    <button onclick="prompt_addition()">Add Icon</button>
+                    <br><br>
+                </div>
+                <button id="export-image_mobile" onclick="makepng()">Export as Image</button>
+                <button onclick="reset_tier_list()">Reset List</button><br>
                 <button title="Export" onclick="urlify()">Template as URL</button>
                 <input title="Allow Edits" type="checkbox" id="allow_editing" checked/>
                 <label for="allow_editing">Allow Changes</label>
@@ -81,10 +84,7 @@
         </div>
 
         <div id="side-bar1">
-            Version: 1.3.1
-            <p>
-                <b>Right click the tier list to export it as image</b>
-            </p>
+            Version: 1.4.0
 
             <p>
                 Click the <b>Add Icon</b> button to start adding images.<br>
@@ -114,7 +114,7 @@
             </p>
 
             <div id="dev_tools">
-                <span>Image Counter: <span id="image-counter-loaded">0</span>/<span id="image-counter-fromlink">0</span></span></span><br>
+                <span>Loaded Image Counter: <span id="image-counter-loaded">0</span>/<span id="image-counter-fromlink">0</span></span></span><br>
                 <button onclick="dev_get_tiers()">Tier Data</button>
                 <button onclick="dev_get_icons()">Icon Data</button>
                 <a href="https://cash.app/$AnAverageFella" target="_blank" rel="noopener"><button id="cashapplink">Donate?</button></a>
