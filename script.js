@@ -227,6 +227,16 @@ function unprompt(){
     document.getElementById("adding_wrapper").style.display = "none"
 }
 
+
+function prompt_output(){
+    document.getElementById("output_image_wrapper").style.display = "flex"
+}
+
+function unoutput(){
+    document.getElementById("output_image_wrapper").style.display = "none"
+}
+
+
 function reset_tier_list(){
     const img_tag_count = Array.prototype.slice.call( document.getElementsByTagName("img") )
     //console.log(img_tag_count)
@@ -257,7 +267,8 @@ async function addimg(style,src,aspect){
         }
     }*/
 
-    newIMG.id = "img"+image_count
+    newIMG.id = "img"+image_count;
+    newIMG.id = (newIMG.id).replace("'","\\'");
     // Add attributes to the new image
     newIMG.setAttribute("ondragstart",'drag(event)')
     newIMG.setAttribute("draggable",'true')
@@ -362,6 +373,12 @@ async function addimg(style,src,aspect){
     imgeList.append(newIMG)
     document.getElementById("image-counter-loaded").innerText = image_loade
     document.getElementById("image-counter-fromlink").innerText = image_count
+
+    if(image_loade == image_count){
+        setTimeout(() =>{
+            document.getElementById("check_loaded_images").style.display = "none";
+        },1000);
+    }
 }
 
 function rmvimg(id){
@@ -392,15 +409,10 @@ function rmvimg(id){
 
 document.getElementById("tier-list").addEventListener("contextmenu",e => {
     e.preventDefault()
-    let contextmenu = document.getElementById("export-image")
-    //alert(e.clientX)
-    contextmenu.style.display = "block"
-    contextmenu.style.marginLeft = e.clientX-10+"px"
-    contextmenu.style.marginTop = e.clientY-10+"px"
 })
 
 document.getElementById("export-image").addEventListener("mouseleave", e=> {
-    document.getElementById("export-image").style.display = "none"
+    document.getElementById("export-image").style.display = "none";
 })
 
 
@@ -519,10 +531,19 @@ function makepng(){
     tierList.style.height = "fit-content"
     tierList.style.minWidth = boxes*max_in_row+10+"px"
     tierList.style.overflowY = "hidden"
-    html2canvas(tierList,{allowTaint: true, useCORs: true}).then(canvas => {
-        let image = canvas.toDataURL("jpg")
+    html2canvas(tierList,
+        {
+            allowTaint: true, 
+            useCORs: true,
+            backgroundColor: null,
+            imageTimeout: 15000
+
+        }).then(canvas => {
+        let image = canvas.toDataURL("jpg");
         
-        window.open(image,`_blank`)
+        document.getElementById("download-link").href = image;
+        document.getElementById("output_image_data").src = image;
+        prompt_output()
         //document.getElementById("img-output").appendChild(canvas)
         //document.getElementById("img-output").removeChild(document.getElementById("img-output").firstChild)
     }).then(() => {

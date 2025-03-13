@@ -18,12 +18,11 @@
         <link rel="stylesheet" href="./style.css" />
     </head>
     <body>
-        <button id="export-image" onclick="makepng()">Export as Image</button>
 
         <div id="adding_wrapper">
             <div id="additional_dialog">
                 <button onclick="addimg('input')" id="add_image_button">Add Images</button>
-                <button onclick="unprompt()" id="close_additional">X</button>
+                <button onclick="unprompt()" class="close_additional">X</button>
                 <br><br>
                 <textarea title="img link" id="img-link" type="url" placeholder="Link to image(separate with new lines)"></textarea><br><br>
                 <input title="IMG src" id="img-file" type="file" multiple="multiple" accept="image/*"/>
@@ -47,6 +46,17 @@
                     Images imported from your pc cannot be used when sharing templates.
                     Try uploading them to an image hosting site and use the image link if you want to share it.
                 </div>
+            </div>
+        </div>
+
+        <div id="output_image_wrapper">
+            <div id="output_image_window">
+                <button onclick="unoutput()" class="close_additional">X</button>
+                <br>
+                <img id="output_image_data" alt="failed to load image" style="border:2px solid white;" width="100%"/>
+                <span id="mobile-disclaimer"><a id="download-link" href="" download>Download</a> If link doesn't work, hold image to save</span>
+                <span id="pc-disclaimer">Right click to copy image</span>
+                
             </div>
         </div>
         
@@ -76,15 +86,17 @@
             
             <br/><br/><br/>
             
-            
-            <div id="images" class="image_list" ondragover="allowDrop(event)" ondrop="drop_handler(event)">
+            <div id="image_wrapper">
+                <span id="check_loaded_images">Loaded Image Counter: <span id="image-counter-loaded">0</span>/<span id="image-counter-fromlink">0</span></span></span><br>
+                <div id="images" class="image_list" ondragover="allowDrop(event)" ondrop="drop_handler(event)">
+            </div>
             </div>
             <br><br><br>
             <div id="img-output"><p></p></div>
         </div>
 
         <div id="side-bar1">
-            Version: 1.4.0
+            Version: 1.4.1
 
             <p>
                 Click the <b>Add Icon</b> button to start adding images.<br>
@@ -114,10 +126,9 @@
             </p>
 
             <div id="dev_tools">
-                <span>Loaded Image Counter: <span id="image-counter-loaded">0</span>/<span id="image-counter-fromlink">0</span></span></span><br>
                 <button onclick="dev_get_tiers()">Tier Data</button>
                 <button onclick="dev_get_icons()">Icon Data</button>
-                <a href="https://cash.app/$AnAverageFella" target="_blank" rel="noopener"><button id="cashapplink">Donate?</button></a>
+                <a href="https://cash.app/$AnAverageFella" target="_blank" rel="noopener"><button id="cashapplink">CashApp</button></a>
                 <br>
                 <button onclick="urlify('old')">Copy Raw Template</button>
                 <button onclick="urlify('new')">Copy Encoded Template</button>
