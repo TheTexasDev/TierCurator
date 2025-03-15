@@ -47,6 +47,7 @@ body {
 
 
 @media only screen and (max-width: 1000px){
+
     #side-bar1 {
         display: none;
     }
@@ -103,14 +104,21 @@ label[for=allow_editing] {
     border-radius: 3px;
 }
 
-.tier{
+
+#tier-list{
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-size: larger;
+    color: white;
+}
+
+.tier {
     min-height: calc(var(--boxes) - var(--borders));
     width: 100%;
     display: flex;
-    background: rgb(30,30,30)
+    background: rgb(30,30,30);
 }
 
-.tier-content{
+.tier-column {
     min-height: inherit;
     line-height: 0;
     width: 100%;
@@ -118,9 +126,10 @@ label[for=allow_editing] {
     border-top: var(--borders) solid gray;
     padding-left: calc(var(--boxes) + var(--borders));*/
     border-bottom: var(--borders) solid gray;
+    border-right: var(--borders) solid gray;
 }
 
-.tier-title{
+.tier-title {
     min-height: inherit;
     max-width: var(--boxes);
     min-width: var(--boxes);
@@ -131,15 +140,37 @@ label[for=allow_editing] {
     text-align: center;
 }
 
+#list-header {
+    display: flex;
+    line-height: calc(var(--boxes) / 2);
+    height: calc(var(--boxes) / 2);
+    background: rgb(30,30,30);
+}
+
+.tier-column-title {
+    flex: 1;
+    text-align: center;
+    border: 1px solid gray;
+}
+
 .tier-title-text {
     /*border: var(--borders) solid red;*/
     margin: auto !important;
-    font-family: Verdana, Geneva, Tahoma, sans-serif;
-    font-size: larger;
     
     -webkit-user-select: none; /* Safari */
     -ms-user-select: none; /* IE 10 and IE 11 */
     user-select: none; /* Standard syntax */
+}
+
+#list-corner {
+    display: block;
+    justify-self: left;
+    text-align: center;
+    width: var(--boxes);
+    border-right: 1px solid gray;
+    color: gray;
+    float: left;
+    font-size: xx-small;
 }
 
 #image_wrapper{
@@ -199,8 +230,6 @@ label[for=allow_editing] {
     overflow-y: auto;
     overflow-x: hidden;
 }
-
-
 
 
 .close_additional {

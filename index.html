@@ -63,6 +63,7 @@
         
         <div id="main-content">
             <div id="tier-list">
+                <div id="list-header"></div>
             </div>
             <br/><br/>
 
@@ -74,6 +75,7 @@
                     <button onclick="create_new_tier()" id="addtier">Add Tier</button>
                     <br>
                     <button onclick="prompt_addition()">Add Icon</button>
+                    <input id="column-count" type="range" min="1" max="5" value="2" title="tiercolumns"/>
                     <br><br>
                 </div>
                 <button id="export-image_mobile" onclick="makepng()">Export as Image</button>
@@ -128,7 +130,7 @@
             <div id="dev_tools">
                 <button onclick="dev_get_tiers()">Tier Data</button>
                 <button onclick="dev_get_icons()">Icon Data</button>
-                <a href="https://cash.app/$AnAverageFella" target="_blank" rel="noopener"><button id="cashapplink">CashApp</button></a>
+                <!-- <a href="https://cash.app/$AnAverageFella" target="_blank" rel="noopener"><button id="cashapplink">CashApp</button></a> -->
                 <br>
                 <button onclick="urlify('old')">Copy Raw Template</button>
                 <button onclick="urlify('new')">Copy Encoded Template</button>

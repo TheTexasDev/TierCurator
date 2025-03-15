@@ -14,6 +14,7 @@ var default_tiers = [
     ["F","#da5e3f",5]
 ]
 var allow_controls = true
+var tier_column_count = 2;
 
 
 let tierList = document.getElementById("tier-list")
@@ -51,6 +52,7 @@ function create_new_tier(){
     add_tier(tier_name,color)
 }
 
+
 function add_tier(title,clr){
     let newTier = document.createElement("div")
     newTier.className = "tier"
@@ -66,14 +68,16 @@ function add_tier(title,clr){
     trueTierTitle.className = "tier-title-text"
     trueTierTitle.innerText = title
     let tierContent = document.createElement("div")
-    tierContent.className = "tier-content"
+    tierContent.className = "tier-column"
     /*tierContent.setAttribute("ondragover",'allowDrop(event)')
     tierContent.setAttribute("ondrop",'drop_handler(event)')
     tierContent.setAttribute("ondblclick",`rmv_tier('${title}')`)*/
 
     tierTitle.append(trueTierTitle)
     newTier.append(tierTitle)
-    newTier.append(tierContent)
+    for(let i = 0; i < tier_column_count; i++){
+        newTier.append(tierContent.cloneNode(true))
+    }
     tierList.appendChild(newTier)
 
     try{
@@ -84,9 +88,10 @@ function add_tier(title,clr){
         console.log("controls disabled")
     }
 
-    tiers_for_linking.push([title,clr,tiers_for_linking.length])
+    tiers_for_linking.push([title,clr,tiers_for_linking.length]);
     rescale_tiers()
 }
+
 
 function rmv_tier(title){
     if (!allow_controls){
@@ -94,15 +99,19 @@ function rmv_tier(title){
     }
 
     let match_index = 0;
-    for(var j = 0; j < tierList.children.length; j++){
-        if(tierList.children[j].children[0].children[0].innerText === title){
-            let tier_icons = tierList.children[j].children[1].children
-            for(var i = 0; i < tier_icons.length; i++){
-                //console.log(tier_icons[i].id)
-                rmvimg(tier_icons[i].id)
+    for(var row = 1; row < tierList.children.length; row++){
+
+        if(tierList.children[row].children[0].children[0].innerText === title){
+            for(var column = 1; column < tierList.children[row].children.length; column++){
+
+                let tier_icons = tierList.children[row].children[column].children;
+                
+                while(tier_icons.length > 0){
+                    rmvimg(tier_icons[0].id)
+                }
             }
-            tierList.removeChild(tierList.children[j])
-            match_index = j;
+            tierList.removeChild(tierList.children[row])
+            match_index = row;
             break;
         }
     }
@@ -116,6 +125,47 @@ function rmv_tier(title){
     })
 
     rescale_tiers()
+}
+
+
+function create_header(){
+    let header_container = document.getElementById("list-header");
+    header_container.innerHTML = `<div id="list-corner">TheTexasDev</div>`
+
+    let newColumn = document.createElement("div");
+    newColumn.className = "tier-column-title";
+
+    if (tier_column_count <= 1){
+        newColumn.innerText = ""
+        header_container.append(newColumn);
+        return;
+    }
+    
+    let under_half = Math.floor(tier_column_count/2)
+    let exact_half = tier_column_count/2
+    let over_half = Math.floor(tier_column_count/2)+1
+
+    for(let i = 0; i < tier_column_count; i++){
+
+        let new_clone = newColumn.cloneNode(true);
+        let column_pwr = ""
+
+        if (i < under_half){
+            column_pwr = "+".repeat(under_half - i)
+        }else if(i >= under_half){
+            column_pwr = "-".repeat(over_half - (tier_column_count - i))
+        }else{
+            column_pwr = "??"
+        }
+
+        if (column_pwr == ""){
+            column_pwr = "•"
+        }
+
+        new_clone.innerText = column_pwr;
+        header_container.append(new_clone);
+    }
+    
 }
 
 
@@ -134,6 +184,38 @@ function rescale_tiers(){
     let mathed = ((Math.floor(1300/Number(document.documentElement.style.getPropertyValue("--boxes").split("px")[0]))-1)*Number(document.documentElement.style.getPropertyValue("--boxes").split("px")[0])+2).toString()+"px"
     document.documentElement.style.setProperty("--tierwidth",mathed)
 }
+
+
+function adjust_column_count(new_column_count){
+
+    console.log(`Target Columns: ${new_column_count} | Current Columns: ${tier_column_count}`)
+
+    for(var row = 1; row < tierList.children.length; row++){
+        if (new_column_count > tier_column_count){
+            
+            let newColumn = document.createElement("div")
+            newColumn.className = "tier-column";
+            for(let i = tier_column_count; i < new_column_count; i++){
+                tierList.children[row].append(newColumn.cloneNode(true))
+            }
+
+            continue;
+        }
+
+        let active_columns = tierList.children[row].children
+        for(let column = tier_column_count; active_columns.length > new_column_count+1; column--){ // the tier titles count as a column programatically so pretend we need an extra
+
+            let tier_icons = active_columns[column].children;
+            
+            while(tier_icons.length > 0){
+                rmvimg(tier_icons[0].id)
+            }
+
+            tierList.children[row].removeChild(tierList.children[row].children[column]);
+        }
+    }
+} 
+
 
 function read_url(actually_do_it){
     actually_do_it = actually_do_it || true
@@ -177,8 +259,14 @@ function read_url(actually_do_it){
         params = params.replace(`&tctier=${whole}`,'')
     }
     console.log(`Got ${tiers.length} tiers from URL`,tiers)
+
+    
     if (tiers.length > 0) {
         default_tiers = tiers
+    }
+
+    if(params.includes("&tccolumns=")){
+        document.getElementById("column-count").value = params.split("&tccolumns=")[1].split("&tc")[0];
     }
 
     if (params.includes("&tcfixed")){
@@ -187,6 +275,9 @@ function read_url(actually_do_it){
         document.getElementById("allow_editing").disabled = true;
         allow_controls = false;
     }
+
+    tier_column_count = Number(document.getElementById("column-count").value);
+    create_header();
 }
 
 
@@ -212,7 +303,7 @@ function drop_handler(eve){
     //console.log(Array.from(eve.target.parentElement.children))
     if (eve.target.tagName == "IMG"){
         eve.target.parentElement.insertBefore(src_img,eve.target)
-    }else if(eve.target.className == "tier-content"){
+    }else if(eve.target.className == "tier-column"){
         eve.target.append(src_img)
     }else if(eve.target.className == "tier"){
         eve.target.children[1].append(src_img)
@@ -243,7 +334,7 @@ function reset_tier_list(){
 
     for (let img_deleter = 0; img_deleter < img_tag_count.length; img_deleter++){
         let thisone = img_tag_count[img_deleter]
-        if (thisone.parentElement.className == "tier-content"){
+        if (thisone.parentElement.className == "tier-column"){
             rmvimg(thisone.id)
             //thisone.dispatchEvent(new MouseEvent("dblclick"))
         }
@@ -388,6 +479,7 @@ function rmvimg(id){
     if(imageparent.className == "image_list"){
         if(!allow_controls){return}
         if(curn_image.hasAttribute("data-origin-link")){
+            // remove link from the template json
             let stored_value = `${curn_image.getAttribute("data-origin-link")}&sh=${curn_image.className.split("_")[1]}`
             let found_you = images_for_linking.indexOf(stored_value)
             if (found_you > -1){
@@ -407,12 +499,17 @@ function rmvimg(id){
 }
 
 
-document.getElementById("tier-list").addEventListener("contextmenu",e => {
-    e.preventDefault()
+document.getElementById("tier-list").addEventListener("contextmenu", e => {
+    e.preventDefault();
 })
 
-document.getElementById("export-image").addEventListener("mouseleave", e=> {
-    document.getElementById("export-image").style.display = "none";
+
+document.getElementById("column-count").addEventListener('change', e => {
+    new_count = Number(document.getElementById("column-count").value);
+    adjust_column_count(new_count)
+
+    tier_column_count = new_count;
+    create_header()
 })
 
 
@@ -448,6 +545,7 @@ function urlify(actually_do_it){
     //console.log(prefix)
 
     let url_additions = ""
+    url_additions = "&tccolumns="+document.getElementById("column-count").value
 
     for(var i = 0; i < tiers_for_linking.length; i++){
         url_additions += "&tctier="+tiers_for_linking[i][0]+"+"+tiers_for_linking[i][1].split("#")[1]
