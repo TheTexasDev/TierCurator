@@ -47,7 +47,6 @@ body {
 
 
 @media only screen and (max-width: 1000px){
-
     #side-bar1 {
         display: none;
     }
@@ -125,7 +124,7 @@ label[for=allow_editing] {
     /*margin-top: calc(0px - var(--boxes));
     border-top: var(--borders) solid gray;
     padding-left: calc(var(--boxes) + var(--borders));*/
-    border-bottom: var(--borders) solid gray;
+    border-top: var(--borders) solid gray;
     border-right: var(--borders) solid gray;
 }
 
@@ -219,6 +218,7 @@ label[for=allow_editing] {
     justify-content: center;
     align-items: center;
 }
+
 #additional_dialog, #output_image_window {
     font-family: monospace;
     border: 5px solid white;
