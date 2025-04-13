@@ -37,6 +37,7 @@ body {
     font-family: Verdana, Geneva, Tahoma, sans-serif;
     font-size: smaller;
     overflow-y: scroll;
+    padding-bottom: 15rem;
 }
 
 
@@ -85,9 +86,35 @@ label[for=allow_editing] {
     color: white;
 }
 
+#presets-list {
+    background-color: rgb(30,30,30);
+    border: 1px solid gray;
+    bottom: 4rem;
+    max-height: 8rem;
+    position: inherit;
+    overflow-y: scroll;
+    width: 16%;
+}
+
+.preset-selection{
+    border-bottom: 1px solid darkgray;
+    margin: .5rem;
+    margin-bottom: .8rem;
+    color: white;
+    text-decoration: none;
+}
+
+.preset-selection > a:visited{
+    text-decoration: none;
+}
+
+.preset-selection:hover {
+    cursor: pointer;
+}
+
 #dev_tools{
     position: inherit;
-    bottom: 5px;
+    bottom: .5rem;
     background-color: rgb(30,30,30);
 }
 

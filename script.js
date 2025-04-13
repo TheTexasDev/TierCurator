@@ -130,7 +130,7 @@ function rmv_tier(title){
 
 function create_header(){
     let header_container = document.getElementById("list-header");
-    header_container.innerHTML = `<div id="list-corner">TheTexasDev</div>`
+    header_container.innerHTML = `<div id="list-corner">Tier Curator</div>`
 
     let newColumn = document.createElement("div");
     newColumn.className = "tier-column-title";
@@ -214,7 +214,41 @@ function adjust_column_count(new_column_count){
             tierList.children[row].removeChild(tierList.children[row].children[column]);
         }
     }
-} 
+}
+
+
+async function load_presets_from_github(){
+    const preset_source_file = "https://raw.githubusercontent.com/TheTexasDev/TierCurator/refs/heads/main/examples.presets.txt";
+    let preset_list = [];
+
+    await fetch(preset_source_file).then(r => r.text()).then(text => {
+        preset_list = text.split("\n");
+    });
+
+    while(preset_list[preset_list.length-1] == ""){
+        preset_list.pop() // remove empty space
+    }
+
+    console.log(preset_list)
+
+    for(var i = 0; i < preset_list.length; i++){
+        let current = preset_list[i]
+        let title = current.split(":")[0];
+        let link_to = "https:"+current.split(":")[2];
+
+        let new_wrapper = document.createElement("div");
+        new_wrapper.className = "preset-selection";
+
+        let new_anchor = document.createElement("a");
+        new_anchor.href = link_to;
+        new_anchor.target = "_blank";
+        new_anchor.innerText = title;
+
+        new_wrapper.appendChild(new_anchor)
+
+        document.getElementById("presets-list").appendChild(new_wrapper);
+    }
+}
 
 
 function read_url(actually_do_it){
@@ -277,14 +311,16 @@ function read_url(actually_do_it){
     }
 
     tier_column_count = Number(document.getElementById("column-count").value);
-    create_header();
 }
 
 
 
 read_url()
+create_header()
+load_presets_from_github()
+
 for(var i = 0; i < default_tiers.length; i++){
-    add_tier(default_tiers[i][0],default_tiers[i][1])
+    add_tier(default_tiers[i][0],default_tiers[i][1]);
 }
 
 
@@ -658,6 +694,7 @@ function makepng(){
     }
     
 }
+
 
 
 
