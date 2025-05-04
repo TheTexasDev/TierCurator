@@ -53,10 +53,10 @@
             <div id="output_image_window">
                 <button onclick="unoutput()" class="close_additional">X</button>
                 <br>
-                <img id="output_image_data" alt="failed to load image" style="border:2px solid white;" width="100%"/>
                 <span id="mobile-disclaimer"><a id="download-link" href="" download>Download</a> If link doesn't work, hold image to save</span>
                 <span id="pc-disclaimer">Right click to copy image</span>
-                
+                <br>
+                <img id="output_image_data" alt="failed to load image" width="100%"/>
             </div>
         </div>
         
@@ -74,8 +74,9 @@
                     <input title="tiernames" id="newtier" type="text" placeholder="Tier Name"/>
                     <button onclick="create_new_tier()" id="addtier">Add Tier</button>
                     <br>
-                    <button onclick="prompt_addition()">Add Icon</button>
                     <input id="column-count" type="range" min="1" max="5" value="2" title="tiercolumns"/>
+                    <button onclick="prompt_addition()" style="float:right;">Add Icon</button>
+                    <br><label>Column Count</label>
                     <br><br>
                 </div>
                 <button id="export-image_mobile" onclick="makepng()">Export as Image</button>
@@ -98,7 +99,7 @@
         </div>
 
         <div id="side-bar1">
-            Version: 1.5.1
+            Tier Curator v5
 
             <p>
                 Click the <b>Add Icon</b> button to start adding images.<br>
@@ -114,6 +115,10 @@
             </p>
 
             <p>
+                You can move a tier by grabbing the title of it the tier and dragging it into onto the tier you want to move it to.
+            </p>
+
+            <p>
                 When adding an Icon, you can use images from your PC files, or a web link.<br>
                 You can <i>choose what shape</i> the image is shown as on the tier list.
                 <b>Square</b> will squish the image into a square.
@@ -126,6 +131,7 @@
                 Due to limitations <i>only web link images can be saved to a template</i><br>
                 Optionally, you can toggle if whoever uses the permalink can modify tiers or Icon list by clicking the <b>Allow Changes</b> option
             </p>
+
 
             <fieldset id="presets-list">
                 <legend>Presets</legend>

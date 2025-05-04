@@ -4,7 +4,7 @@ body {
 
 :root {
     --boxes: 100px;
-    --borders: 2px;
+    --borders: 0.15rem;
     --tierwidth: 1000px;
 }
 
@@ -46,7 +46,6 @@ body {
 }
 
 
-
 @media only screen and (max-width: 1000px){
     #side-bar1 {
         display: none;
@@ -75,6 +74,7 @@ body {
     border: 2px solid gray;
     border-radius: 10px;
     line-height: 25px;
+    color: white;
 }
 
 #img-file, #controls, #additional_dialog, button, input, select, option {
@@ -98,13 +98,14 @@ label[for=allow_editing] {
 
 .preset-selection{
     border-bottom: 1px solid darkgray;
-    margin: .5rem;
-    margin-bottom: .8rem;
+    padding-bottom: .5rem;
+    padding-top: .5rem;
     color: white;
     text-decoration: none;
 }
 
-.preset-selection > a:visited{
+.preset-selection > a {
+    color: rgb(22, 110, 241);
     text-decoration: none;
 }
 
@@ -217,6 +218,11 @@ label[for=allow_editing] {
     padding: 2px;
 }
 
+#output_image_data {
+    width: 32rem;
+    border:2px solid white;
+}
+
 .img_square {
     height: var(--boxes);
     width: var(--boxes);
@@ -248,12 +254,12 @@ label[for=allow_editing] {
 
 #additional_dialog, #output_image_window {
     font-family: monospace;
-    border: 5px solid white;
+    border: 0.2rem solid white;
     border-radius: 2px;
     background-color: rgb(200,200,200);
     padding: 20px;
-    width: 450px;
-    height: 250px;
+    width: 35rem;
+    height: 20rem;
     overflow-y: auto;
     overflow-x: hidden;
 }

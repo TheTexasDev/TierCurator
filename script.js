@@ -24,6 +24,18 @@ let tiers_for_linking = []
 let images_for_linking = []
 
 
+function tier_id_gen(){
+    const text = "abcdefghijklmnopqrstuvwxyz0123456789ABCDDFGHIJKLMNOPQRSTUVWXYZ";
+    const id_length = 5;
+    let identifier = ""
+
+    for(var i = 0; i < id_length; i++){
+        identifier += text[Math.round(Math.random()*text.length)-1]
+    }
+
+    return identifier;
+}
+
 function create_new_tier(){
     let tier_name = document.getElementById('newtier').value
     let color = document.getElementById('newcolor').value
@@ -55,9 +67,12 @@ function create_new_tier(){
 
 function add_tier(title,clr){
     let newTier = document.createElement("div")
-    newTier.className = "tier"
+    newTier.className = "tier";
+    newTier.id = tier_id_gen();
+    newTier.setAttribute("ondragstart",'drag(event)')
     newTier.setAttribute("ondragover",'allowDrop(event)')
     newTier.setAttribute("ondrop",'drop_handler(event)')
+    newTier.setAttribute("draggable",'true')
     //let timestamp = new Date().getTime()
     //newTier.id = (timestamp*parseInt(clr.split("#")[1],16)).toFixed(3).toString().replace(".",'')
     let tierTitle = document.createElement("div")
@@ -328,21 +343,58 @@ function allowDrop(eve){
     eve.preventDefault()
 }
 
+
+
 function drag(eve){
-    eve.dataTransfer.setData("text",eve.target.id)
+    eve.dataTransfer.setData("text",eve.target.id);
 }
 
 function drop_handler(eve){
     eve.preventDefault()
-    var src_img = document.getElementById(eve.dataTransfer.getData("text"))
+    var src_element = document.getElementById(eve.dataTransfer.getData("text"));
     
     //console.log(Array.from(eve.target.parentElement.children))
-    if (eve.target.tagName == "IMG"){
-        eve.target.parentElement.insertBefore(src_img,eve.target)
+    if(src_element.className == "tier"){
+        // Moving a tier row
+        let element_of_hovered = null; // the div of the target row
+        let position_of_grabbed = 0;
+        let row_to_displace = null; // the index of the target row
+        
+        if(eve.target.className == "tier-title"){
+            element_of_hovered = eve.target.parentElement;
+
+        }else if(eve.target.className == "tier-title-text"){
+            element_of_hovered = eve.target.parentElement.parentElement;
+            //element_of_hovered.parentElement.insertBefore(src_element,element_of_hovered);
+
+        }else{
+            console.log(eve.target)
+            return
+        }
+        
+        row_to_displace = Array.prototype.slice.call(element_of_hovered.parentElement.children).indexOf(element_of_hovered);
+        position_of_grabbed = Array.prototype.slice.call(element_of_hovered.parentElement.children).indexOf(src_element);
+
+        if (row_to_displace > 0){
+            if (position_of_grabbed < row_to_displace){
+                // Hovering over any row underneath the grabbed row
+                // place the src_element row BELOW the target
+                element_of_hovered.parentElement.insertBefore(src_element,element_of_hovered.nextSibling);
+
+            }else{
+                // hovering over any row above the grabbed row
+                // place the src_element row above the target row 
+                element_of_hovered.parentElement.insertBefore(src_element,element_of_hovered);
+            }
+        }
+
+
+    }else if (eve.target.tagName == "IMG"){
+        eve.target.parentElement.insertBefore(src_element,eve.target)
     }else if(eve.target.className == "tier-column"){
-        eve.target.append(src_img)
+        eve.target.append(src_element)
     }else if(eve.target.className == "tier"){
-        eve.target.children[1].append(src_img)
+        eve.target.children[1].append(src_element)
     }
 }
 
@@ -417,6 +469,9 @@ async function addimg(style,src,aspect){
         if (fetch_proxy == "corsproxy"){
             fetch_proxy = 'https://corsproxy.io/?url='
 
+        }else if (fetch_proxy == "corslol"){
+            fetch_proxy = 'https://api.cors.lol/?url='
+            
         }else{
             fetch_proxy = ''
         }
@@ -639,6 +694,7 @@ Element.prototype.remove = function() {
 function makepng(){
    
     document.documentElement.style.setProperty("--boxes","200px")
+    //document.documentElement.style.setProperty("--tierwidth","fit-content")
     let max_in_row = 12
     let boxes = Number(document.documentElement.style.getPropertyValue('--boxes').split("px")[0])
     let counts = document.getElementsByClassName("tier-title-text")
@@ -686,6 +742,7 @@ function makepng(){
 
     //rescale_tiers()
     tierList.style.minWidth = "400px"
+    
     //tierList.style.overflowY = "scroll"
     
     for (var x = 0; x < counts.length; x++) {
