@@ -60,6 +60,15 @@ function create_new_tier(){
         }
     }
 
+    /*
+    // Set color input to a random color
+
+    const color_int_options = ["28","40","55","77","99","bb","cc","dd","ee","ff"]
+    const COLORGEN = "#"+color_int_options[Math.round(Math.random()*(color_int_options.length-1))].toString()+color_int_options[Math.round(Math.random()*(color_int_options.length-1))].toString()+color_int_options[Math.round(Math.random()*(color_int_options.length-1))].toString();
+    //console.log(COLORGEN)
+    document.getElementById('newcolor').value = COLORGEN;
+    */
+
     
     add_tier(tier_name,color)
 }
@@ -81,7 +90,7 @@ function add_tier(title,clr){
     tierTitle.setAttribute("ondblclick",`rmv_tier('${title}')`)
     let trueTierTitle = document.createElement("div")
     trueTierTitle.className = "tier-title-text"
-    trueTierTitle.innerText = title
+    trueTierTitle.innerText = title.replace("%20"," ");
     let tierContent = document.createElement("div")
     tierContent.className = "tier-column"
     /*tierContent.setAttribute("ondragover",'allowDrop(event)')
@@ -104,7 +113,6 @@ function add_tier(title,clr){
     }
 
     tiers_for_linking.push([title,clr,tiers_for_linking.length]);
-    rescale_tiers()
 }
 
 
@@ -137,9 +145,7 @@ function rmv_tier(title){
             tiers_for_linking.splice(j,1)
         }
         j += 1
-    })
-
-    rescale_tiers()
+    });
 }
 
 
@@ -181,23 +187,6 @@ function create_header(){
         header_container.append(new_clone);
     }
     
-}
-
-
-function rescale_tiers(){
-
-    if(tierList.children.length >= 9){
-        document.documentElement.style.setProperty('--boxes','70px')
-    }else if(tierList.children.length >= 8){
-        document.documentElement.style.setProperty('--boxes','80px')
-    }else if(tierList.children.length >= 7){
-        document.documentElement.style.setProperty('--boxes','90px')
-    }else{
-        document.documentElement.style.setProperty('--boxes','100px')
-    }
-
-    let mathed = ((Math.floor(1300/Number(document.documentElement.style.getPropertyValue("--boxes").split("px")[0]))-1)*Number(document.documentElement.style.getPropertyValue("--boxes").split("px")[0])+2).toString()+"px"
-    document.documentElement.style.setProperty("--tierwidth",mathed)
 }
 
 
@@ -273,7 +262,9 @@ function read_url(actually_do_it){
     if (url == ""){return}
     let params = url.slice(url.indexOf("?")+1,url.length)
     //console.log(params)
-    params = pako.ungzip(params.split(","),{to:"string"})
+    if(!params.includes("&tc")){
+        params = pako.ungzip(params.split(","),{to:"string"})
+    }
     //console.log(params)
 
     let image_links = []
@@ -332,11 +323,12 @@ function read_url(actually_do_it){
 
 read_url()
 create_header()
-load_presets_from_github()
 
 for(var i = 0; i < default_tiers.length; i++){
     add_tier(default_tiers[i][0],default_tiers[i][1]);
 }
+
+load_presets_from_github()
 
 
 function allowDrop(eve){
@@ -737,10 +729,8 @@ function makepng(){
         //document.getElementById("img-output").appendChild(canvas)
         //document.getElementById("img-output").removeChild(document.getElementById("img-output").firstChild)
     }).then(() => {
-        rescale_tiers()
     })
 
-    //rescale_tiers()
     tierList.style.minWidth = "400px"
     
     //tierList.style.overflowY = "scroll"
