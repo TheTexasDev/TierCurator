@@ -13,6 +13,13 @@ var default_tiers = [
     ["D","#ffc72c",4],
     ["F","#da5e3f",5]
 ]
+var default_opposites = [
+    "High Skill Floor",
+    "High Skill Cap",
+    "Low Skill Floor",
+    "Low Skill Cap"
+]
+var changing_opp = 0;
 var allow_controls = true
 var tier_column_count = 2;
 
@@ -23,6 +30,71 @@ let imgeList = document.getElementById("images")
 let tiers_for_linking = []
 let images_for_linking = []
 
+const debug_level = 1; // Debug level, if any debug logs are sent with a level less than this one they will be logged
+
+
+
+
+function debug(lvl_threshold,...msgs){
+    /*
+        a console.log but only if the debug level is greater than the threshold
+        < 0 however are always debugged.
+    */
+
+    if (msgs.length < 1){ // doesn't include anything except the first parameter automatically sets the threshold to the lowest priority.
+        msgs = [lvl_threshold];
+        lvl_threshold = 1; 
+    }
+
+    if (debug_level < lvl_threshold && !(lvl_threshold < 0)){
+        // if the debug level is too low and its not a negative then don't do anything.
+       return "Nothing to Debug";
+    }
+
+
+
+    let output = [];
+    let target_position = -1;
+
+    msgs.unshift("\n")
+    msgs.forEach(input_val => {
+        if (input_val === "\\n" || input_val === "\n"){
+            target_position += 1;
+            output[target_position] = ""
+        }
+
+        if (typeof input_val == "string"){
+            output[target_position] += " "+input_val;
+        }else if(typeof input_val == "object"){
+            output[target_position] += " "+JSON.stringify(input_val)
+        }else{
+            output[target_position] += " "+input_val.toString();
+        }
+    })
+    
+    return `Debug[${lvl_threshold}]:`+output.join("\n");
+}
+
+
+function get_relative_mousepos(ev){
+    // get the current mouse position in the browser
+    let x = ev.clientX;
+    let y = ev.clientY;
+    // get the position of the element you applied the handler to
+    let pos = ev.target.getBoundingClientRect();
+    // subtract the position of the element (rounded up to the next
+    // integer) from the mouse position and return it.
+    return {
+        x: x - pos.x|1,
+        y: y - pos.y|1
+    };
+}
+
+
+function get_tier_type(){
+    const type = ["tier","pyramid","matchup","opposite"][Number(document.getElementById("tier-type").value)]
+    return type;
+}
 
 function tier_id_gen(){
     const text = "abcdefghijklmnopqrstuvwxyz0123456789ABCDDFGHIJKLMNOPQRSTUVWXYZ";
@@ -30,7 +102,7 @@ function tier_id_gen(){
     let identifier = ""
 
     for(var i = 0; i < id_length; i++){
-        identifier += text[Math.round(Math.random()*text.length)-1]
+        identifier += text[Math.floor(Math.random()*text.length)-1]
     }
 
     return identifier;
@@ -39,6 +111,23 @@ function tier_id_gen(){
 function create_new_tier(){
     let tier_name = document.getElementById('newtier').value
     let color = document.getElementById('newcolor').value
+
+    if (get_tier_type() == "opposite"){
+        
+        if (tier_name.length > 0) default_opposites[changing_opp] = tier_name;
+        changing_opp += 1;
+        if (changing_opp > 3){
+            changing_opp = 0;
+        }
+
+        document.getElementById("opposite-top").innerText = default_opposites[0];
+        document.getElementById("opposite-right").innerText = default_opposites[1];
+        document.getElementById("opposite-bottom").innerText = default_opposites[2];
+        document.getElementById("opposite-left").innerText = default_opposites[3];
+
+        return;
+    }
+
     if (tier_name.length < 1){
         alert("Tier has no title")
         return
@@ -74,45 +163,70 @@ function create_new_tier(){
 }
 
 
-function add_tier(title,clr){
+function add_tier(title,clr,add_to_tiers){
+    const type = get_tier_type();
+    if (add_to_tiers !== false){
+        add_to_tiers = true;
+    }
+
     let newTier = document.createElement("div")
     newTier.className = "tier";
     newTier.id = tier_id_gen();
     newTier.setAttribute("ondragstart",'drag(event)')
     newTier.setAttribute("ondragover",'allowDrop(event)')
     newTier.setAttribute("ondrop",'drop_handler(event)')
-    newTier.setAttribute("draggable",'true')
+    if(allow_controls !== true){
+        newTier.setAttribute("draggable",'false');
+    }else{
+        newTier.setAttribute("draggable",'true');
+    }
     //let timestamp = new Date().getTime()
     //newTier.id = (timestamp*parseInt(clr.split("#")[1],16)).toFixed(3).toString().replace(".",'')
     let tierTitle = document.createElement("div")
     tierTitle.className = "tier-title"
+    if (type == "pyramid") tierTitle.className += " pyramid"
+
     tierTitle.style.backgroundColor = clr
     tierTitle.setAttribute("ondblclick",`rmv_tier('${title}')`)
     let trueTierTitle = document.createElement("div")
     trueTierTitle.className = "tier-title-text"
     trueTierTitle.innerText = title.replace("%20"," ");
-    let tierContent = document.createElement("div")
+    let tierContent = document.createElement("div");
     tierContent.className = "tier-column"
+    
+    if (type == "pyramid") tierContent.className += " pyramid"
     /*tierContent.setAttribute("ondragover",'allowDrop(event)')
     tierContent.setAttribute("ondrop",'drop_handler(event)')
     tierContent.setAttribute("ondblclick",`rmv_tier('${title}')`)*/
 
+    let paddingdivs = document.createElement("div");
+    paddingdivs.className = "column-padding";
+    paddingdivs.style.width = ((tier_column_count+3)/tier_column_count)*100+"%";
+    //paddingdivs.style.width = "33%";
+
     tierTitle.append(trueTierTitle)
+    if (type == "pyramid") newTier.append(paddingdivs.cloneNode(true))
     newTier.append(tierTitle)
+
     for(let i = 0; i < tier_column_count; i++){
         newTier.append(tierContent.cloneNode(true))
     }
-    tierList.appendChild(newTier)
+
+    if (type == "pyramid") newTier.append(paddingdivs.cloneNode(true))
+
+    
+    tierList.appendChild(newTier);
 
     try{
         
         document.getElementById('newtier').value = ""
         document.getElementById('newcolor').value = ""
     }catch{
-        console.log("controls disabled")
+        console.log(debug(1,"controls disabled"));
     }
 
-    tiers_for_linking.push([title,clr,tiers_for_linking.length]);
+    if (add_to_tiers == true) tiers_for_linking.push([title,clr,tiers_for_linking.length]);
+    if (type == "pyramid") tier_column_count += 1;
 }
 
 
@@ -150,17 +264,22 @@ function rmv_tier(title){
 
 
 function create_header(){
+    const t_type = get_tier_type()
+    if (t_type != "tier") return;
+
     let header_container = document.getElementById("list-header");
     header_container.innerHTML = `<div id="list-corner">Tier Curator</div>`
 
     let newColumn = document.createElement("div");
     newColumn.className = "tier-column-title";
 
+    
     if (tier_column_count <= 1){
-        newColumn.innerText = ""
+        newColumn.innerText = "";
         header_container.append(newColumn);
         return;
     }
+
     
     let under_half = Math.floor(tier_column_count/2)
     let exact_half = tier_column_count/2
@@ -192,7 +311,7 @@ function create_header(){
 
 function adjust_column_count(new_column_count){
 
-    console.log(`Target Columns: ${new_column_count} | Current Columns: ${tier_column_count}`)
+    console.log(debug(2,`Target Columns: ${new_column_count} | Current Columns: ${tier_column_count}`))
 
     for(var row = 1; row < tierList.children.length; row++){
         if (new_column_count > tier_column_count){
@@ -212,7 +331,9 @@ function adjust_column_count(new_column_count){
             let tier_icons = active_columns[column].children;
             
             while(tier_icons.length > 0){
-                rmvimg(tier_icons[0].id)
+                if (rmvimg(tier_icons[0].id) == null){
+                    break;
+                }
             }
 
             tierList.children[row].removeChild(tierList.children[row].children[column]);
@@ -233,7 +354,7 @@ async function load_presets_from_github(){
         preset_list.pop() // remove empty space
     }
 
-    console.log(preset_list)
+    console.log(debug(3,preset_list))
 
     for(var i = 0; i < preset_list.length; i++){
         let current = preset_list[i]
@@ -259,13 +380,22 @@ function read_url(actually_do_it){
     actually_do_it = actually_do_it || true
 
     let url = window.location.search
-    if (url == ""){return}
+    if (url == ""){
+        tierlistinate();
+        return;
+    }
     let params = url.slice(url.indexOf("?")+1,url.length)
     //console.log(params)
     if(!params.includes("&tc")){
         params = pako.ungzip(params.split(","),{to:"string"})
     }
     //console.log(params)
+
+    let t_type = "tier";
+    if (params.includes("&tctype")){
+        t_type = params.split("&tctype=")[1].split("&tc")[0];
+    }
+    
 
     let image_links = []
     let image_shape = "square"
@@ -285,27 +415,42 @@ function read_url(actually_do_it){
         }
 
     }
-    console.log(`Got ${image_links.length} images from URL`,image_links)
+    console.log(debug(3,`Got ${image_links.length} images from URL`,image_links))
 
 
     let tiers = []
+
+    let start = 0;
     while(params.indexOf("&tctier=") > -1){
-        let whole = params.split("&tctier=")[1].split("&tc")[0]
-        let both = whole.split("+")
-        both[0] = both[0].replace("%20"," ")
-        both[1] = "#"+both[1]
-        both[2] = tiers.length
-        tiers.push(both)
-        params = params.replace(`&tctier=${whole}`,'')
+        if (t_type == "opposite"){
+
+            if (start > 3){
+                break;
+            }
+            default_opposites[start] = params.split("&tctier=")[1].split("&tc")[0];
+            params = params.replace(`&tctier=${default_opposites[start]}`,'')
+            start++;
+
+        }else{
+
+            let whole = params.split("&tctier=")[1].split("&tc")[0]
+            let both = whole.split("+")
+            both[0] = both[0].replace("%20"," ")
+            both[1] = "#"+both[1]
+            both[2] = tiers.length
+            tiers.push(both)
+            params = params.replace(`&tctier=${whole}`,'')
+        }
     }
-    console.log(`Got ${tiers.length} tiers from URL`,tiers)
+
+    console.log(debug(1, `Got ${tiers.length} tiers from URL`,tiers))
 
     
     if (tiers.length > 0) {
         default_tiers = tiers
     }
 
-    if(params.includes("&tccolumns=")){
+    if(t_type == "tier" && params.includes("&tccolumns=")){
         document.getElementById("column-count").value = params.split("&tccolumns=")[1].split("&tc")[0];
     }
 
@@ -316,18 +461,27 @@ function read_url(actually_do_it){
         allow_controls = false;
     }
 
+    if (t_type == "opposite"){
+        oppositize()
+    }else if (t_type == "pyramid"){
+        pyramidify()
+    }else{
+        console.log(debug(1, "No list type was specified in url, defaulting to Tier List."))
+        tierlistinate()
+    }
+
+    document.getElementById("tier-type").value = ["tier","pyramid","matchup","opposite"].indexOf(t_type).toString()
     tier_column_count = Number(document.getElementById("column-count").value);
+    
 }
 
 
 
 read_url()
 create_header()
-
 for(var i = 0; i < default_tiers.length; i++){
     add_tier(default_tiers[i][0],default_tiers[i][1]);
 }
-
 load_presets_from_github()
 
 
@@ -338,8 +492,12 @@ function allowDrop(eve){
 
 
 function drag(eve){
+    if (get_tier_type() == "opposite"){
+        document.getElementById("graph-screen").style.zIndex = 20; // Make the screen layer higher than the elements
+    }
     eve.dataTransfer.setData("text",eve.target.id);
 }
+
 
 function drop_handler(eve){
     eve.preventDefault()
@@ -360,7 +518,7 @@ function drop_handler(eve){
             //element_of_hovered.parentElement.insertBefore(src_element,element_of_hovered);
 
         }else{
-            console.log(eve.target)
+            //console.log(eve.target)
             return
         }
         
@@ -382,9 +540,35 @@ function drop_handler(eve){
 
 
     }else if (eve.target.tagName == "IMG"){
-        eve.target.parentElement.insertBefore(src_element,eve.target)
-    }else if(eve.target.className == "tier-column"){
-        eve.target.append(src_element)
+        const dropcolumn = eve.target.parentElement
+        if (dropcolumn.className.includes("pyramid")){
+            return;
+        }
+
+    }else if(eve.target.className.includes("tier-column")){
+        if (eve.target.className.includes("pyramid")){
+            if (eve.target.children.length < 1){
+                eve.target.append(src_element);
+            }else{
+                return;
+            }
+
+        }else{
+            eve.target.append(src_element);
+        }
+
+    }else if(eve.target.id == "graph-screen"){
+
+        src_element.style.position = "absolute";
+        let x_pos = get_relative_mousepos(eve)["x"] - (Number(src_element.width)/2);
+        let y_pos = get_relative_mousepos(eve)["y"] - (Number(src_element.height)/2);
+        src_element.style.left = x_pos+"px";
+        src_element.style.top = y_pos+"px";
+
+        //document.getElementById("controls-modifiers").innerText = "x:"++" y:"+get_relative_mousepos(eve)["y"]
+        document.getElementById("full-graph").append(src_element);
+        document.getElementById("graph-screen").style.zIndex = 10; // reset layer position
+
     }else if(eve.target.className == "tier"){
         eve.target.children[1].append(src_element)
     }
@@ -409,14 +593,16 @@ function unoutput(){
 
 
 function reset_tier_list(){
+    //console.log("Resetting List....")
     const img_tag_count = Array.prototype.slice.call( document.getElementsByTagName("img") )
-    //console.log(img_tag_count)
+    console.log(debug(3,"Images to Delete: ", img_tag_count))
 
     for (let img_deleter = 0; img_deleter < img_tag_count.length; img_deleter++){
         let thisone = img_tag_count[img_deleter]
-        if (thisone.parentElement.className == "tier-column"){
-            rmvimg(thisone.id)
-            //thisone.dispatchEvent(new MouseEvent("dblclick"))
+        // move ANY image that has the id "img#" and isn't in the icon list 
+        if (thisone.parentElement.className != "image_list" && thisone.id.match(/img(\d)+/)){
+
+            rmvimg(thisone.id);
         }
     }
 }
@@ -458,44 +644,61 @@ async function addimg(style,src,aspect){
     if(style == "link"){
         let fetch_proxy = document.querySelector("input[name='proxy']:checked").value
 
-        if (fetch_proxy == "corsproxy"){
-            fetch_proxy = 'https://corsproxy.io/?url='
+        const proxies = [
+            'https://corsproxy.io/?url=',
+            'https://api.cors.lol/?url=',
+            'http://fuck-cors.com/?url=',
+            'https://crossorigin.me/',
+            'http://www.corsify.me/'
 
-        }else if (fetch_proxy == "corslol"){
-            fetch_proxy = 'https://api.cors.lol/?url='
-            
-        }else{
-            fetch_proxy = ''
-        }
+        ];
 
         if (src.includes("\n")){
             // if line breaks are present then separate them and loop through each one
             let individual_lines = src.split("\n")
             for (const individual_link of individual_lines){
                 if (individual_link != ""){
-                    console.log(individual_link)
+                    console.log(debug(2,individual_link))
                     addimg("link",individual_link,document.getElementById("image_aspect_picker").value)
                 }else{
-                    console.log("line is blank")
+                    console.log(debug(2,"Import line is blank"))
                 }
             }
             return;
 
         }else{
-            try{
-                image_count += 1
-                await loadImageFromBlob(fetch_proxy+encodeURIComponent(src)).then((value) => {
+            image_count += 1;
+
+
+            if (fetch_proxy == "noproxy"){
+                await loadImageFromBlob(encodeURIComponent(src)).then((value) => {
                     newIMG.setAttribute("src",value.src)
                     image_loade += 1
-                })
-            
-            }catch(e){
-                console.log(`Failed to find "${src}"`)
-                return
+                });
+
+            }else{
+                let break_flag = false;
+                for(const curn_proxy of proxies){ // loop through all proxies.
+                    if (break_flag){
+                        break;
+                    }
+                    try {
+
+                        await loadImageFromBlob(curn_proxy+encodeURIComponent(src)).then((value) => {
+                            newIMG.setAttribute("src",value.src)
+                            image_loade += 1
+                        }).then(() => {
+                            break_flag = true;
+                        })
+
+                    }catch(e){
+                        console.log(debug(3,`${curn_proxy}: Failed to find '${src}'`))
+                        break_flag = false;
+                    }
+                }
+
             }
-
         }
-
 
         newIMG.setAttribute("data-origin-link",src)
         images_for_linking.push(src+"&sh="+aspect)
@@ -555,9 +758,13 @@ async function addimg(style,src,aspect){
     }
 }
 
+
 function rmvimg(id){
     let curn_image = document.getElementById(id)
-    let imageparent = curn_image.parentElement
+    if (curn_image == null){
+        return null;
+    }
+    let imageparent = curn_image.parentElement;
 
     if(imageparent.className == "image_list"){
         if(!allow_controls){return}
@@ -596,6 +803,14 @@ document.getElementById("column-count").addEventListener('change', e => {
 })
 
 
+document.getElementById("newcolor").addEventListener('change', e => {
+    if (get_tier_type() == "opposite"){
+        //console.log(debug(3,document.getElementById("newcolor").value))
+        document.getElementById("full-graph").style.backgroundColor = document.getElementById("newcolor").value;
+    }
+});
+
+
 
 async function loadImageFromBlob(url) {
     return new Promise((resolve, reject) => {
@@ -614,7 +829,7 @@ async function loadImageFromBlob(url) {
           image.addEventListener('error', reject);
   
         }).catch(error =>{
-            console.log(`Cannot resolve link "${url}"`)
+            console.log(debug(-1,`Cannot resolve link "${url}"`))
             return false;
         })
   
@@ -626,14 +841,28 @@ function urlify(actually_do_it){
     let full = window.location.href
     prefix = (full+"?").split("?")[0]
     //console.log(prefix)
+    const t_type = get_tier_type();
 
     let url_additions = ""
-    url_additions = "&tccolumns="+document.getElementById("column-count").value
+    url_additions += "&tctype="+t_type;
+    
+    if(t_type == "tier") url_additions += "&tccolumns="+document.getElementById("column-count").value
 
-    for(var i = 0; i < tiers_for_linking.length; i++){
-        url_additions += "&tctier="+tiers_for_linking[i][0]+"+"+tiers_for_linking[i][1].split("#")[1]
+    if (t_type == "tier" || t_type == "pyramid"){
+        for(let i = 0; i < tiers_for_linking.length; i++){
+            url_additions += "&tctier="+tiers_for_linking[i][0]+"+"+tiers_for_linking[i][1].split("#")[1]
+        }
+
+    }else if (t_type == "opposite"){
+        url_additions += "&tctier="+default_opposites[0]
+        url_additions += "&tctier="+default_opposites[1]
+        url_additions += "&tctier="+default_opposites[2]
+        url_additions += "&tctier="+default_opposites[3]
+
     }
 
+
+    // Add the Icons to the Permalink
     for(var i = 0; i < images_for_linking.length; i++){
         url_additions += "&tcimg="+images_for_linking[i]
     }
@@ -669,7 +898,7 @@ function urlify(actually_do_it){
     try {
         
         navigator.clipboard.writeText(prefix+"?"+compressed);
-        console.log('Content copied to clipboard');
+        console.log(debug(1,'Content copied to clipboard'))
         alert("Copied Permalink to clipboard!")
     } catch (err) {
         console.error('Failed to copy: ', err);
@@ -684,10 +913,11 @@ Element.prototype.remove = function() {
 
 
 function makepng(){
-   
-    document.documentElement.style.setProperty("--boxes","200px")
+    const t_type = get_tier_type()
+
+    if (t_type != "opposite") document.documentElement.style.setProperty("--boxes","200px");
     //document.documentElement.style.setProperty("--tierwidth","fit-content")
-    let max_in_row = 12
+    //let max_in_row = 12
     let boxes = Number(document.documentElement.style.getPropertyValue('--boxes').split("px")[0])
     let counts = document.getElementsByClassName("tier-title-text")
 
@@ -709,10 +939,14 @@ function makepng(){
 
     window.scrollTo(0,0)
     
-    //document.documentElement.style.setProperty("--tierwidth","1920px")
-    tierList.style.height = "fit-content"
-    tierList.style.minWidth = boxes*max_in_row+10+"px"
-    tierList.style.overflowY = "hidden"
+    if (t_type !== "opposite"){
+        //document.documentElement.style.setProperty("--tierwidth","1920px")
+        tierList.style.height = "fit-content"
+        //tierList.style.minWidth = boxes*max_in_row+10+"px"
+        tierList.style.width = "fit-content";
+        tierList.style.minWidth = "fit-content";
+        tierList.style.overflowY = "hidden"
+    }
     html2canvas(tierList,
         {
             allowTaint: true, 
@@ -730,18 +964,18 @@ function makepng(){
         //document.getElementById("img-output").removeChild(document.getElementById("img-output").firstChild)
     }).then(() => {
     })
-
-    tierList.style.minWidth = "400px"
     
     //tierList.style.overflowY = "scroll"
     
+    document.documentElement.style.setProperty("--boxes","100px");
+    tierList.style.width = "var(--tierwidth)";
+
     for (var x = 0; x < counts.length; x++) {
         counts[x].style.position = ``
         counts[x].style.paddingTop = `0`
     }
     
 }
-
 
 
 
@@ -762,4 +996,122 @@ function dev_get_icons(){
     } catch (err) {
         console.error('Failed to copy: ', err);
     }
+}
+
+
+
+/* Tier list type changing stuff */
+function tier_change(){
+    const t_type = get_tier_type();
+    console.log(debug(3,"Got Tier Type: ",t_type,"type: ",typeof t_type))
+    reset_tier_list();
+    console.log(debug(4,"Resetted List"))
+
+    if (t_type == "tier"){
+        console.log(debug(2,"Convert to Tier List"))
+        tierlistinate()
+
+    }else if (t_type == "pyramid"){
+        console.log(debug(2,"Convert to Pyramid"))
+        pyramidify()
+        
+    }else if (t_type == "opposite"){
+        console.log(debug(2,"Convert to Opposite"))
+        oppositize()
+    } else {
+        console.log(debug(2,"No target to change list to"))
+    }
+}
+
+function tierlistinate(){
+    document.getElementById("column-count").disabled = false;
+    tierList.className = ""
+    tierList.innerHTML = "<div id='list-header'></div>"
+
+    tier_column_count = 2;
+    
+    create_header();
+
+    for(var i = 0; i < tiers_for_linking.length; i++){
+        add_tier(tiers_for_linking[i][0],tiers_for_linking[i][1],false);
+    }
+    
+    adjust_column_count(tier_column_count);
+    document.getElementById("column-count").value = 2;
+
+    /* Dialog Tutorial Changes */
+    document.getElementById("dialog_add_tier").innerHTML = "To create a new tier simply <b>press Add Tier</b> and it will use the selected color from the option next to it you also <i>need a tier name</i> by typing it into the textbox."
+}
+
+
+function pyramidify(){
+    tierList.innerHTML = "<div id='list-header'></div>"
+    tierList.className = "pyramid"
+
+    tier_column_count = 1
+
+    for(var i = 0; i < tiers_for_linking.length; i++){
+        add_tier(tiers_for_linking[i][0],tiers_for_linking[i][1],false);
+    }
+
+    document.getElementById("column-count").value = 1;
+    document.getElementById("column-count").disabled = true;
+    document.getElementById('list-header').innerHTML = "<div id='list-center'>TierCurator</div>"
+
+    //adjust_column_count(1);
+    tier_column_count = tierList.children.length;
+    //adjust_column_count(tier_column_count);
+
+
+    /* Dialog Tutorial Changes */
+    document.getElementById("dialog_add_tier").innerHTML = "To create a new tier simply <b>press Add Tier</b> and it will use the selected color from the option next to it you also <i>need a tier name</i> by typing it into the textbox."
+}
+
+
+function oppositize(){
+    tierList.className = ""
+    document.getElementById("column-count").value = 4;
+    document.getElementById("column-count").disabled = true;
+    document.getElementById("newcolor").value = "#181818";
+    tierList.innerHTML = "<div id='full-graph'></div>";
+
+    let area = document.createElement("div")
+    area.id = 'graph-screen'
+    area.setAttribute("ondragstart",'drag(event)')
+    area.setAttribute("ondragover",'allowDrop(event)');
+    area.setAttribute("ondrop",'drop_handler(event)');
+    tierList.append(area);
+    
+
+    let horizontal_line = document.createElement("div");
+    horizontal_line.className = "horizontal-line";
+    let vertical_line = document.createElement("div");
+    vertical_line.className = "vertical-line";
+
+    let top_opp = document.createElement("div");
+    top_opp.id = "opposite-top";
+    top_opp.innerText = default_opposites[0]
+
+    let right_opp = document.createElement("div");
+    right_opp.id = "opposite-right";
+    right_opp.innerText = default_opposites[1]
+
+    let bottom_opp = document.createElement("div");
+    bottom_opp.id = "opposite-bottom";
+    bottom_opp.innerText = default_opposites[2]
+
+    let left_opp = document.createElement("div");
+    left_opp.id = "opposite-left";
+    left_opp.innerText = default_opposites[3]
+
+    
+    document.getElementById("full-graph").appendChild(horizontal_line.cloneNode(true))
+    document.getElementById("full-graph").appendChild(vertical_line.cloneNode(true))
+    document.getElementById("full-graph").appendChild(top_opp)
+    document.getElementById("full-graph").appendChild(right_opp)
+    document.getElementById("full-graph").appendChild(bottom_opp)
+    document.getElementById("full-graph").appendChild(left_opp)
+
+     /* Dialog Tutorial Changes */
+     document.getElementById("dialog_add_tier").innerHTML = "Changing the <b>tier title</b> will change the top scale. Changing it again will change the right scale, then bottom, then left, then back to the top scale."
 }

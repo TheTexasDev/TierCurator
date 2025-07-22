@@ -37,7 +37,7 @@
                 <form>
                     <input type="radio" name="proxy" id="use-proxy-none" value="noproxy" title="no proxy"/>
                     <label for="use-proxy-non">No Proxy</label>
-                    <input type="radio" name="proxy" id="use-proxy-cors" value="corsproxy" title="corsproxy" checked/>
+                    <input type="radio" name="proxy" id="use-proxy-cors" value="yesproxy" title="corsproxy" checked/>
                     <label for="use-proxy-cors">Use Corsproxy</label>
                 </form>
 
@@ -76,7 +76,13 @@
                     <br>
                     <input id="column-count" type="range" min="1" max="5" value="2" title="tiercolumns"/>
                     <button onclick="prompt_addition()" style="float:right;">Add Icon</button>
-                    <br><label>Column Count</label>
+                    <br>
+                    <select title="tier-type" id="tier-type" style="float:right;" onchange="tier_change()" autocomplete="off">
+                        <option value="0">Tier List</option>
+                        <option value="1">Pyramid</option>
+                        <option value="2" disabled>Matchup</option>
+                        <option value="3">Opposite</option>
+                    </select>
                     <br><br>
                 </div>
                 <button id="export-image_mobile" onclick="makepng()">Export as Image</button>
@@ -99,7 +105,7 @@
         </div>
 
         <div id="side-bar1">
-            Tier Curator v7
+            Tier Curator v8
 
             <p>
                 Click the <b>Add Icon</b> button to start adding images.<br>
@@ -109,7 +115,7 @@
                 <b>Double click it again</b> while in the unused box to remove it completely from the page and the template.
             </p>
 
-            <p>
+            <p id="dialog_add_tier">
                 To create a new tier simply <b>press Add Tier</b> and it will use the selected color from the option next to it
                 you also <i>need a tier name</i> by typing it into the textbox.
             </p>
