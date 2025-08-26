@@ -30,7 +30,7 @@ let imgeList = document.getElementById("images")
 let tiers_for_linking = []
 let images_for_linking = []
 
-const debug_level = 1; // Debug level, if any debug logs are sent with a level less than this one they will be logged
+const debug_level = 3; // Debug level, if any debug logs are sent with a level less than this one they will be logged
 
 
 
@@ -384,9 +384,32 @@ function read_url(actually_do_it){
         tierlistinate();
         return;
     }
+
     let params = url.slice(url.indexOf("?")+1,url.length)
     //console.log(params)
-    if(!params.includes("&tc")){
+
+    // version four, compressed pako
+    if (params.startsWith("v4")){
+        console.log(debug(3,"Base62Pako"))
+        params = params.split("v4")[1]
+        let unbased_pako = "";
+
+        params.split("-").forEach(sector => {
+            let base10num = fromBase62(sector).toString();
+            if (base10num.length > 3){
+                unbased_pako += base10num.substring(0,3)+","+base10num.substring(3)+","
+            }else{
+                unbased_pako += base10num+",";
+            }
+        });
+
+        unbased_pako = unbased_pako.substring(0,unbased_pako.length-1);
+        console.log(debug(1,unbased_pako))
+        params = pako.ungzip(unbased_pako.split(","),{to:"string"});
+
+
+    }else if (!params.includes("&tc")){
+        console.log(debug(3,"Pako URL"))
         params = pako.ungzip(params.split(","),{to:"string"})
     }
     //console.log(params)
@@ -837,10 +860,12 @@ async function loadImageFromBlob(url) {
 }
 
 
-function urlify(actually_do_it){
+
+function urlify(url_version){
+    url_version = url_version || "new"
     let full = window.location.href
     prefix = (full+"?").split("?")[0]
-    //console.log(prefix)
+    
     const t_type = get_tier_type();
 
     let url_additions = ""
@@ -876,34 +901,87 @@ function urlify(actually_do_it){
 
     const old_url = prefix+"?"+url_additions
     const compressed = pako.gzip(url_additions.toString())
-
-    try{
-        if (actually_do_it == "old"){
-            navigator.clipboard.writeText(old_url);
-            alert("Copied decoded (old) url")
-            return
-        }else if (actually_do_it == "new"){
-            navigator.clipboard.writeText(prefix+"?"+compressed);
-            alert("Copied pako url")
+    
+    let even_more_compressed = "v4"
+    let previous_measure = 0;
+    compressed.toString().split(",").forEach(item => {
+        if (previous_measure > 99){
+            even_more_compressed += toBase62(Number(previous_measure.toString()+item.toString()))+"-"
+            previous_measure = 0;
+            return;
+        }
+        
+        if (item.length == 3){
+            previous_measure = Number(item)
             return
         }
-    } catch (err) {
-        console.error('Failed to copy: ', err);
+
+        even_more_compressed += toBase62(Number(item))+"-"
+    });
+    even_more_compressed = even_more_compressed.substring(0,even_more_compressed.length-1)
+
+
+    let warn_message = "";
+    if (image_loade < image_count){
+        warn_message = "\nNot all images were loaded before exporting."
     }
+    try{
+        if (url_version == "old"){
+            navigator.clipboard.writeText(old_url);
+            alert("Copied decoded (old) url"+warn_message)
+            return;
+        }else if (url_version == "pako"){
+            navigator.clipboard.writeText(prefix+"?"+compressed);
+            alert("Copied pako url"+warn_message)
+            return;
+        }else if (url_version == "new"){
+            navigator.clipboard.writeText(prefix+"?"+even_more_compressed);
+            alert("Copied permalink to clipboard"+warn_message)
+            return;
+        }
+    } catch (err) {
+        alert("Failed to copy :(")
+        console.error('Failed to copy: ', err);
+        return;
+    }
+
 
     /* A remnant of my original idea to leave the permalink as plaintext in the controls box. (which stretched it wayyy tf out) 
     I keep it here to shame myself. */
     //document.getElementById("controls").innerHTML += "<br>"
     //document.getElementById("controls").innerHTML += prefix+"?"+url_additions+"&tc"
-    try {
-        
-        navigator.clipboard.writeText(prefix+"?"+compressed);
-        console.log(debug(1,'Content copied to clipboard'))
-        alert("Copied Permalink to clipboard!")
-    } catch (err) {
-        console.error('Failed to copy: ', err);
-    }
 }
+
+
+/* From kevinyan815  on github https://gist.github.com/kevinyan815/f71b2f5ca3541631abd2e50f3929739b */
+function toBase62(n) {
+    if (n === 0) {
+        return '0';
+    }
+    var digits = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    var result = ''; 
+    while (n > 0) {
+        result = digits[n % digits.length] + result;
+        n = parseInt(n / digits.length, 10);
+    }
+
+    return result;
+}
+  
+function fromBase62(s) {
+    var digits = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    var result = 0;
+    for (var i=0 ; i<s.length ; i++) {
+        var p = digits.indexOf(s[i]);
+        if (p < 0) {
+        return NaN;
+        }
+        result += p * Math.pow(digits.length, s.length - i - 1);
+    }
+    return result;
+}
+
+  
 
 
 Element.prototype.remove = function() {
