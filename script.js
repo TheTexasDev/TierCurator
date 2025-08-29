@@ -22,7 +22,7 @@ var default_opposites = [
 var changing_opp = 0;
 var allow_controls = true
 var tier_column_count = 2;
-
+var template_type = "tier";
 
 let tierList = document.getElementById("tier-list")
 let imgeList = document.getElementById("images")
@@ -30,7 +30,7 @@ let imgeList = document.getElementById("images")
 let tiers_for_linking = []
 let images_for_linking = []
 
-const debug_level = 3; // Debug level, if any debug logs are sent with a level less than this one they will be logged
+const debug_level = 1; // Debug level, if any debug logs are sent with a level less than this one they will be logged
 
 
 
@@ -58,6 +58,10 @@ function debug(lvl_threshold,...msgs){
 
     msgs.unshift("\n")
     msgs.forEach(input_val => {
+        if (input_val == undefined){
+            output[target_position] += " undefined"
+            return;
+        }
         if (input_val === "\\n" || input_val === "\n"){
             target_position += 1;
             output[target_position] = ""
@@ -92,8 +96,11 @@ function get_relative_mousepos(ev){
 
 
 function get_tier_type(){
-    const type = ["tier","pyramid","matchup","opposite"][Number(document.getElementById("tier-type").value)]
-    return type;
+    if(allow_controls){
+        const type = ["tier","pyramid","matchup","opposite"][Number(document.getElementById("tier-type").value)]
+        return type;
+    }
+    return template_type;
 }
 
 function tier_id_gen(){
@@ -175,6 +182,7 @@ function add_tier(title,clr,add_to_tiers){
     newTier.setAttribute("ondragstart",'drag(event)')
     newTier.setAttribute("ondragover",'allowDrop(event)')
     newTier.setAttribute("ondrop",'drop_handler(event)')
+    newTier.setAttribute("hexcolor", clr)
     if(allow_controls !== true){
         newTier.setAttribute("draggable",'false');
     }else{
@@ -225,7 +233,7 @@ function add_tier(title,clr,add_to_tiers){
         console.log(debug(1,"controls disabled"));
     }
 
-    if (add_to_tiers == true) tiers_for_linking.push([title,clr,tiers_for_linking.length]);
+    if (add_to_tiers == true) tiers_for_linking.push([title, clr, tiers_for_linking.length]);
     if (type == "pyramid") tier_column_count += 1;
 }
 
@@ -354,7 +362,7 @@ async function load_presets_from_github(){
         preset_list.pop() // remove empty space
     }
 
-    console.log(debug(3,preset_list))
+    console.log(debug(7,preset_list))
 
     for(var i = 0; i < preset_list.length; i++){
         let current = preset_list[i]
@@ -391,7 +399,7 @@ function read_url(actually_do_it){
     // version four, compressed pako
     if (params.startsWith("v4")){
         console.log(debug(3,"Base62Pako"))
-        params = params.split("v4")[1]
+        params = params.slice(2) // cuts out the v4 from the start
         let unbased_pako = "";
 
         params.split("-").forEach(sector => {
@@ -406,7 +414,8 @@ function read_url(actually_do_it){
         unbased_pako = unbased_pako.substring(0,unbased_pako.length-1);
         console.log(debug(1,unbased_pako))
         params = pako.ungzip(unbased_pako.split(","),{to:"string"});
-
+        
+        console.log(debug(6,params))
 
     }else if (!params.includes("&tc")){
         console.log(debug(3,"Pako URL"))
@@ -417,6 +426,8 @@ function read_url(actually_do_it){
     let t_type = "tier";
     if (params.includes("&tctype")){
         t_type = params.split("&tctype=")[1].split("&tc")[0];
+        template_type = t_type;
+        console.log(debug(5,"tier type is",template_type))
     }
     
 
@@ -473,14 +484,10 @@ function read_url(actually_do_it){
         default_tiers = tiers
     }
 
-    if(t_type == "tier" && params.includes("&tccolumns=")){
-        document.getElementById("column-count").value = params.split("&tccolumns=")[1].split("&tc")[0];
-    }
 
     if (params.includes("&tcfixed")){
-        document.getElementById("controls-modifiers").remove();
-        document.getElementById("allow_editing").checked = false;
-        document.getElementById("allow_editing").disabled = true;
+        document.getElementById("controls-modifiers").innerHTML = "";
+        document.getElementById("controls-modifiers").innerText = "You cannot adjust tiers or remove images when controls are disabled";
         allow_controls = false;
     }
 
@@ -488,13 +495,24 @@ function read_url(actually_do_it){
         oppositize()
     }else if (t_type == "pyramid"){
         pyramidify()
+    }else if (t_type == "tier"){
+
+        tierlistinate(false)
+        if(params.includes("&tccolumns=")){
+            tier_column_count = params.split("&tccolumns=")[1].split("&tc")[0]
+            if(allow_controls) document.getElementById("column-count").value = tier_column_count;
+            adjust_column_count(tier_column_count)
+        }
+
     }else{
         console.log(debug(1, "No list type was specified in url, defaulting to Tier List."))
         tierlistinate()
     }
 
-    document.getElementById("tier-type").value = ["tier","pyramid","matchup","opposite"].indexOf(t_type).toString()
-    tier_column_count = Number(document.getElementById("column-count").value);
+    if(allow_controls){
+        document.getElementById("tier-type").value = ["tier","pyramid","matchup","opposite"].indexOf(t_type).toString()
+        tier_column_count = Number(document.getElementById("column-count").value);
+    }
     
 }
 
@@ -526,12 +544,13 @@ function drop_handler(eve){
     eve.preventDefault()
     var src_element = document.getElementById(eve.dataTransfer.getData("text"));
     
-    //console.log(Array.from(eve.target.parentElement.children))
-    if(src_element.className == "tier"){
-        // Moving a tier row
+    
+    
+    if(src_element.className == "tier"){ // Moving a tier row
+        
         let element_of_hovered = null; // the div of the target row
         let position_of_grabbed = 0;
-        let row_to_displace = null; // the index of the target row
+        let row_to_displace = null; // the index of the target 
         
         if(eve.target.className == "tier-title"){
             element_of_hovered = eve.target.parentElement;
@@ -553,7 +572,6 @@ function drop_handler(eve){
                 // Hovering over any row underneath the grabbed row
                 // place the src_element row BELOW the target
                 element_of_hovered.parentElement.insertBefore(src_element,element_of_hovered.nextSibling);
-
             }else{
                 // hovering over any row above the grabbed row
                 // place the src_element row above the target row 
@@ -562,11 +580,28 @@ function drop_handler(eve){
         }
 
 
+        // otherwise if not moving a tier will be moving an image
     }else if (eve.target.tagName == "IMG"){
+        console.log(debug(6,"Dropped onto: image"))
+
         const dropcolumn = eve.target.parentElement
+
         if (dropcolumn.className.includes("pyramid")){
+            // pyramid only allows one image per column.
+            // so swap their positions
+
+            if (dropcolumn == src_element.parentElement){return}
+
+            src_element.parentElement.appendChild(eve.target.cloneNode(true))
+            dropcolumn.removeChild(eve.target)
+            dropcolumn.appendChild(src_element)
+            
             return;
         }
+        
+        
+        dropcolumn.insertBefore(src_element,eve.target);
+        
 
     }else if(eve.target.className.includes("tier-column")){
         if (eve.target.className.includes("pyramid")){
@@ -662,6 +697,10 @@ async function addimg(style,src,aspect){
     }else{
         newIMG.setAttribute("class","img_square") 
     }
+
+    if (style == "source"){
+        newIMG.classList.add("local_image")
+    }
     
 
     if(style == "link"){
@@ -733,6 +772,7 @@ async function addimg(style,src,aspect){
         image_loade += 1
 
     }else if(style == "file"){
+
         for(var i = 0; i < document.getElementById("img-file").files.length; i++){
             var reader = new FileReader();
             reader.onload = function(e) {
@@ -760,10 +800,33 @@ async function addimg(style,src,aspect){
             addimg('link',document.getElementById("img-link").value,document.getElementById("image_aspect_picker").value)
             document.getElementById("img-link").value = ""
         }
+
         if (document.getElementById("img-file").files.length > 0){
             //console.log(document.getElementById("img-file").files.length)
             addimg("file")
             document.getElementById("img-file").value = ""
+        }
+
+        if (document.getElementById("img-folder").files.length > 0){
+            
+            console.log(debug(4,"Folder too.\n",document.getElementById("img-folder").files.length,"files"))
+            const taken_files = document.getElementById("img-folder").files;
+
+            for (let i = 0; i < taken_files.length; i++){
+                console.log(debug(4,"Hey look at this file name",taken_files[i].name))
+                if ( !taken_files[i].type.startsWith("image/")) {
+                    continue; // not an accepted image file. :(
+                }
+
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    const imageDataUrl = e.target.result;
+                    addimg("source", imageDataUrl, document.getElementById("image_aspect_picker").value);
+                };      
+                //console.log(document.getElementById("img-file").files[i])
+                reader.readAsDataURL(document.getElementById("img-folder").files[i])
+            }
+            document.getElementById("img-folder").value = ""
         }
         return;
 
@@ -833,6 +896,24 @@ document.getElementById("newcolor").addEventListener('change', e => {
     }
 });
 
+document.getElementById("img-file").addEventListener("change",() => {
+    update_showing_queue("More images added");
+})
+/*
+document.getElementById("img-link")..addEventListener("change",() => {
+    update_showing_queue("Added more!");
+})
+*/
+document.getElementById("img-folder").addEventListener("change",() => {
+    update_showing_queue("Detected folder, unknown image count :3");
+})
+
+function update_showing_queue(text){
+    document.getElementById("images_ready").innerText = text;
+    setTimeout(() => {
+        document.getElementById("images_ready").innerText = ""
+    },2500)
+}
 
 
 async function loadImageFromBlob(url) {
@@ -861,8 +942,9 @@ async function loadImageFromBlob(url) {
 
 
 
-function urlify(url_version){
+function urlify(url_version,returnit){
     url_version = url_version || "new"
+    returnit = returnit || false;
     let full = window.location.href
     prefix = (full+"?").split("?")[0]
     
@@ -871,11 +953,19 @@ function urlify(url_version){
     let url_additions = ""
     url_additions += "&tctype="+t_type;
     
-    if(t_type == "tier") url_additions += "&tccolumns="+document.getElementById("column-count").value
+    if(t_type == "tier") url_additions += ("&tccolumns="+tier_column_count)
 
     if (t_type == "tier" || t_type == "pyramid"){
+        console.log(debug(4,"Tier type is tier or pyramid, getting tiers."))
+
         for(let i = 0; i < tiers_for_linking.length; i++){
-            url_additions += "&tctier="+tiers_for_linking[i][0]+"+"+tiers_for_linking[i][1].split("#")[1]
+            //url_additions += "&tctier="+tiers_for_linking[i][0]+"+"+tiers_for_linking[i][1].split("#")[1]
+            tiers_for_linking = []
+            const active_tiers = document.getElementsByClassName("tier")
+            for(let i = 0; i < active_tiers.length; i++){
+                const curn_tier = active_tiers[i]
+                url_additions += "&tctier="+curn_tier.children[0].children[0].innerText+"+"+curn_tier.getAttribute("hexcolor").split("#")[1] //[curn_tier.children[0].children[0].innerText, curn_tier.getAttribute("hexcolor")]
+            }
         }
 
     }else if (t_type == "opposite"){
@@ -891,6 +981,7 @@ function urlify(url_version){
     for(var i = 0; i < images_for_linking.length; i++){
         url_additions += "&tcimg="+images_for_linking[i]
     }
+   
 
    
     if (document.getElementById("allow_editing").checked){
@@ -925,16 +1016,21 @@ function urlify(url_version){
     if (image_loade < image_count){
         warn_message = "\nNot all images were loaded before exporting."
     }
+
+
     try{
         if (url_version == "old"){
+            if (returnit) return old_url;
             navigator.clipboard.writeText(old_url);
             alert("Copied decoded (old) url"+warn_message)
             return;
         }else if (url_version == "pako"){
+            if(returnit) return prefix+"?"+compressed;
             navigator.clipboard.writeText(prefix+"?"+compressed);
             alert("Copied pako url"+warn_message)
             return;
         }else if (url_version == "new"){
+            if(returnit)return prefix+"?"+even_more_compressed;
             navigator.clipboard.writeText(prefix+"?"+even_more_compressed);
             alert("Copied permalink to clipboard"+warn_message)
             return;
@@ -951,6 +1047,64 @@ function urlify(url_version){
     //document.getElementById("controls").innerHTML += "<br>"
     //document.getElementById("controls").innerHTML += prefix+"?"+url_additions+"&tc"
 }
+
+
+async function download_template(){
+    var PackageZ = new JSZip();
+    let images = Array.prototype.slice.call(document.getElementsByClassName("local_image"))
+
+    if (images.length < 1 || images[0] == null){
+        alert("No images to speak of!")
+        return;
+    }else{
+        console.log(images)
+    }
+
+    console.log(debug(2,"Converting images to blob..."));
+    let info_to_download = images.map((async (sourcedata) => {
+        if(!sourcedata.src.startsWith("data:image/")){
+            console.log(debug(4,sourcedata.id,"is not a local image!!"))
+            // Can't download non-data images. At least not straight up.
+            // need to find a work-around later.
+            return;
+        }
+        //console.log(sourcedata)
+        const res = await fetch(sourcedata.src)
+        const blobbo = await res.blob();
+        return blobbo
+    }));
+
+    const spawns = await Promise.all(info_to_download);
+
+    console.log(debug(2,"Packing Images..."))
+    spawns.forEach((blob, index) => {
+        let filetype = blob.type.split("image/")[1];
+        PackageZ.file("icon"+index+"."+filetype, blob);
+    })
+
+    console.log(debug(2,"Generating URL..."));
+    const url_too = await urlify("new",true)
+    
+    console.log(debug(2,"Generating HTML file..."))
+    const templatehtmlredirect = `<!DOCTYPE html>\n<html>\n<head>\n\t<title>Tier Curator ZIPTemplate Redirect</title>\n</head>\n<body>\n\t<a id="redirector" href="${url_too}">\n\t<script>\n\t\tdocument.getElementById("redirector").click()</script>\n</body>`
+    PackageZ.file("tierlist.html",templatehtmlredirect)
+    
+    console.log(debug(2,"Generating ZIP file..."))
+    await PackageZ.generateAsync({type:"blob"}).then((content) => {
+        let elm = document.createElement('a'); 
+
+        elm.href = window.URL.createObjectURL(content);
+        elm.download = 'TierCuratorTemplate.zip';
+
+        document.body.appendChild(elm)
+        elm.click();
+        elm.remove();
+    });
+
+    console.log(debug(2,"ZIP file has been created and downloaded!"))
+
+}
+
 
 
 /* From kevinyan815  on github https://gist.github.com/kevinyan815/f71b2f5ca3541631abd2e50f3929739b */
@@ -1019,11 +1173,11 @@ function makepng(){
     
     if (t_type !== "opposite"){
         //document.documentElement.style.setProperty("--tierwidth","1920px")
-        tierList.style.height = "fit-content"
-        //tierList.style.minWidth = boxes*max_in_row+10+"px"
+        //tierList.style.height = "fit-content"
         tierList.style.width = "fit-content";
-        tierList.style.minWidth = "fit-content";
-        tierList.style.overflowY = "hidden"
+        tierList.style.minWidth = "calc(var(--boxes) * 6)";
+        tierList.style.maxWidth = "calc(var(--boxes) * 30)"
+        //tierList.style.overflowY = "hidden" // this is the default, why did I need this???
     }
     html2canvas(tierList,
         {
@@ -1047,11 +1201,13 @@ function makepng(){
     
     document.documentElement.style.setProperty("--boxes","100px");
     tierList.style.width = "var(--tierwidth)";
+    tierList.style.maxWidth = "var(--tierwidth)";
 
+    /* This is useless unless that unneeded code above is uncommented
     for (var x = 0; x < counts.length; x++) {
         counts[x].style.position = ``
         counts[x].style.paddingTop = `0`
-    }
+    }*/
     
 }
 
@@ -1101,21 +1257,30 @@ function tier_change(){
     }
 }
 
-function tierlistinate(){
-    document.getElementById("column-count").disabled = false;
+
+function tierlistinate(adjust_columns){
+    adjust_columns = adjust_columns || true;
+    if(allow_controls){
+        document.getElementById("column-count").disabled = false;
+    }
     tierList.className = ""
     tierList.innerHTML = "<div id='list-header'></div>"
 
-    tier_column_count = 2;
-    
-    create_header();
+    if (adjust_columns == true){
+        tier_column_count = 2;
+        create_header();
+    }
 
     for(var i = 0; i < tiers_for_linking.length; i++){
         add_tier(tiers_for_linking[i][0],tiers_for_linking[i][1],false);
     }
     
-    adjust_column_count(tier_column_count);
-    document.getElementById("column-count").value = 2;
+    if (adjust_columns == true){
+        adjust_column_count(tier_column_count);
+        if(allow_controls){
+            document.getElementById("column-count").value = tier_column_count;
+        }
+    }
 
     /* Dialog Tutorial Changes */
     document.getElementById("dialog_add_tier").innerHTML = "To create a new tier simply <b>press Add Tier</b> and it will use the selected color from the option next to it you also <i>need a tier name</i> by typing it into the textbox."

@@ -21,31 +21,38 @@
 
         <div id="adding_wrapper">
             <div id="additional_dialog">
-                <button onclick="addimg('input')" id="add_image_button">Add Images</button>
-                <button onclick="unprompt()" class="close_additional">X</button>
-                <br><br>
-                <textarea title="img link" id="img-link" type="url" placeholder="Link to image(separate with new lines)"></textarea><br><br>
-                <input title="IMG src" id="img-file" type="file" multiple="multiple" accept="image/*"/>
+                <button onclick="unprompt()" class="close_additional">X</button><br>
 
+                
+                             
+                
+                <input id="img-file" type="file" multiple accept="image/*"/>
+                <label for="img-file" class="file-upload-label">Upload Files</label>
+                
+                <input id="img-folder" type="file" webkitdirectory directory accept="image/*"/>
+                <label for="img-folder" class="file-upload-label">Upload Folder</label>
+
+                <br><br>
+                <textarea title="img link" id="img-link" type="url" placeholder="Link to image(separate with new lines)"></textarea>
+
+                <br>
+                <span id="images_ready"></span>
+                <br><br>
+                <button onclick="addimg('input')" id="add_image_button">Add Images</button>
                 <select id="image_aspect_picker" title="Aspect Ratio">
                     <option value="square">1:1 (Square)</option>
                     <option value="circle">1:1 (Circle)</option>
                     <option selected="selected" value="freeform">X:Y (Freeform)</option>
                 </select>
 
-                <br>
-                <form>
+
+                <br><br>
+                <form id="proxy-picker">
                     <input type="radio" name="proxy" id="use-proxy-none" value="noproxy" title="no proxy"/>
                     <label for="use-proxy-non">No Proxy</label>
                     <input type="radio" name="proxy" id="use-proxy-cors" value="yesproxy" title="corsproxy" checked/>
                     <label for="use-proxy-cors">Use Corsproxy</label>
                 </form>
-
-                <br><br>
-                <div id="disclaimer">
-                    Images imported from your pc cannot be used when sharing templates.
-                    Try uploading them to an image hosting site and use the image link if you want to share it.
-                </div>
             </div>
         </div>
 
@@ -72,11 +79,13 @@
                 <div id="controls-modifiers">
                     <input title="tiercolor" id="newcolor" type="color"/>
                     <input title="tiernames" id="newtier" type="text" placeholder="Tier Name"/>
-                    <button onclick="create_new_tier()" id="addtier">Add Tier</button>
+                    <button onclick="create_new_tier()" id="addtier" style="float:right;">Add Tier</button>
                     <br>
                     <input id="column-count" type="range" min="1" max="5" value="2" title="tiercolumns"/>
                     <button onclick="prompt_addition()" style="float:right;">Add Icon</button>
                     <br>
+                    <input title="Allow Edits" type="checkbox" id="allow_editing" checked/>
+                    <label for="allow_editing">Allow Changes</label>
                     <select title="tier-type" id="tier-type" style="float:right;" onchange="tier_change()" autocomplete="off">
                         <option value="0">Tier List</option>
                         <option value="1">Pyramid</option>
@@ -86,10 +95,9 @@
                     <br><br>
                 </div>
                 <button id="export-image_mobile" onclick="makepng()">Export as Image</button>
-                <button onclick="reset_tier_list()">Reset List</button><br>
+                <button onclick="reset_tier_list()">Clear List</button><br>
                 <button title="Export" onclick="urlify()">Template as URL</button>
-                <input title="Allow Edits" type="checkbox" id="allow_editing" checked/>
-                <label for="allow_editing">Allow Changes</label>
+                <button title="Export" onclick="download_template()">Template as .ZIP</button>
             </div>
             
             
@@ -105,7 +113,7 @@
         </div>
 
         <div id="side-bar1">
-            Tier Curator v9
+            Tier Curator v10
 
             <p>
                 Click the <b>Add Icon</b> button to start adding images.<br>
@@ -135,6 +143,7 @@
             <p>
                 Exporting a tier list as URL will create a permalink that can be shared with others. The link will lead them back to this site using the same tiers and images you provided.<br>
                 Due to limitations <i>only web link images can be saved to a template</i><br>
+                Exporting a tier list as ZIP will create a .zip file containing all the Icons and Tiers which can be shared.<br>
                 Optionally, you can toggle if whoever uses the permalink can modify tiers or Icon list by clicking the <b>Allow Changes</b> option
             </p>
 
@@ -157,5 +166,6 @@
     
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/pako/1.0.3/pako.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" integrity="sha512-XMVd28F1oH/O71fzwBnV7HucLxVwtxf26XV8P4wPk26EDxuGZ91N8bsOttmnomcCD3CS5ZMRL50H0GgOHvegtg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <script src="./script.js"></script>
 </html>
