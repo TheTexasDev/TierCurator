@@ -176,6 +176,10 @@ function add_tier(title,clr,add_to_tiers){
         add_to_tiers = true;
     }
 
+    let scalingInterval = 8; // At what interval text length to start decreasing the font size of the tier title
+    let scalingRate = 1/8; // How much to decrease the font size (%) by every interval
+    let minimumScale = 4/8; // The smallest font size allowed
+
     let newTier = document.createElement("div")
     newTier.className = "tier";
     newTier.id = tier_id_gen();
@@ -195,10 +199,15 @@ function add_tier(title,clr,add_to_tiers){
     if (type == "pyramid") tierTitle.className += " pyramid"
 
     tierTitle.style.backgroundColor = clr
-    tierTitle.setAttribute("ondblclick",`rmv_tier('${title}')`)
+    tierTitle.setAttribute("ondblclick",`rmv_tier('','${newTier.id}')`)
     let trueTierTitle = document.createElement("div")
     trueTierTitle.className = "tier-title-text"
     trueTierTitle.innerText = title.replace("%20"," ");
+    if(title.length > scalingInterval){
+        scaleDown = 1-(scalingRate*(Math.floor(title.length/scalingInterval)+1))
+        if (scaleDown < minimumScale) scaleDown = minimumScale
+        tierTitle.style.fontSize = scaleDown+"em";
+    }
     let tierContent = document.createElement("div");
     tierContent.className = "tier-column"
     
@@ -225,8 +234,7 @@ function add_tier(title,clr,add_to_tiers){
     
     tierList.appendChild(newTier);
 
-    try{
-        
+    try{ 
         document.getElementById('newtier').value = ""
         document.getElementById('newcolor').value = ""
     }catch{
@@ -238,7 +246,8 @@ function add_tier(title,clr,add_to_tiers){
 }
 
 
-function rmv_tier(title){
+function rmv_tier(title,tier_id){
+
     if (!allow_controls){
         return; // controls disabled
     }
@@ -246,7 +255,7 @@ function rmv_tier(title){
     let match_index = 0;
     for(var row = 1; row < tierList.children.length; row++){
 
-        if(tierList.children[row].children[0].children[0].innerText === title){
+        if(tierList.children[row].id == tier_id || tierList.children[row].children[0].children[0].innerText === title){
             for(var column = 1; column < tierList.children[row].children.length; column++){
 
                 let tier_icons = tierList.children[row].children[column].children;
@@ -941,6 +950,40 @@ async function loadImageFromBlob(url) {
 }
 
 
+document.getElementById("image-location-toggle").addEventListener("change",() =>{
+    let use_side_images = document.getElementById("image-location-toggle").checked;
+    if (use_side_images){
+        sideImages();
+    }else{
+        normalImages();
+    }
+})
+
+function sideImages(){
+    let image_container = document.getElementById("images");
+    let image_counter = document.getElementById("check_loaded_images");
+    let sidebar = document.getElementById("side-bar1");
+    let dialogs = document.getElementsByClassName("side-dialog");
+
+    for(var i = 0; i < dialogs.length; i++){
+        dialogs[i].style.display = "none";
+    }
+
+    sidebar.insertBefore(image_counter,dialogs[0])
+    sidebar.insertBefore(image_container,dialogs[0])
+}
+
+function normalImages(){
+    let image_container = document.getElementById("images");
+    let og_area = document.getElementById("image_wrapper");
+    let dialogs = document.getElementsByClassName("side-dialog");
+
+    for(var i = 0; i < dialogs.length; i++){
+        dialogs[i].style.display = "block";
+    }
+
+    og_area.appendChild(image_container)
+}
 
 function urlify(url_version,returnit){
     url_version = url_version || "new"

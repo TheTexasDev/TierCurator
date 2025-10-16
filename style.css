@@ -1,5 +1,6 @@
 body {
     background-color: rgb(30,30,30);
+    overflow-y: scroll;
 }
 
 :root {
@@ -39,20 +40,76 @@ body {
 }
 
 
-#side-bar1{
-    border: var(--borders) solid gray;
+#side-bar0{
     position: fixed;
-    width: 19%;
-    bottom: 0;
+    width: 20%;
     right: 0;
     top: 0;
-    padding: 4px;
+    bottom: 0;
     color: rgb(220,220,220);
     font-family: Verdana, Geneva, Tahoma, sans-serif;
     font-size: smaller;
-    overflow-y: scroll;
-    padding-bottom: 15rem;
+    border: var(--borders) solid gray;
 }
+
+
+#side-bar1{
+    right: 0;
+    top: 0;
+    padding: 4px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: 70%;
+    /*height: max-content;
+    border-bottom: var(--borders) solid gray;*/
+}
+
+#bottom-section {
+    border-top: var(--borders) solid gray;
+    border-bottom: var(--borders) solid gray;
+    background-color: rgb(30,30,30);
+    padding: 4px;
+    /*margin-top: 5px;
+    top: auto;
+    bottom: 0;
+    height: fit-content;*/
+    height: 30%;
+}
+
+
+#presets-list {
+    background-color: rgb(30,30,30);
+    border: 1px solid gray;
+    bottom: 4rem;
+    max-height: 8rem;
+    overflow-y: scroll;
+    margin-bottom: 1rem;
+    right: 0;
+}
+
+.preset-selection{
+    border-bottom: 1px solid darkgray;
+    padding-bottom: .5rem;
+    padding-top: .5rem;
+    color: white;
+    text-decoration: none;
+}
+
+.preset-selection > a {
+    color: rgb(22, 110, 241);
+    text-decoration: none;
+}
+
+.preset-selection:hover {
+    cursor: pointer;
+}
+
+#dev_tools{
+    border: 1px solid gray;
+    bottom: .5rem;
+    background-color: rgb(30,30,30);
+}
+
 
 
 #mobile-disclaimer {
@@ -107,6 +164,8 @@ button {
     border-right: 2px solid #5f5f5f;
 }
 
+
+
 input[type='file']{
     display:none;
 }
@@ -134,38 +193,6 @@ label[for=allow_editing] {
     color: white;
 }
 
-#presets-list {
-    background-color: rgb(30,30,30);
-    border: 1px solid gray;
-    bottom: 4rem;
-    max-height: 8rem;
-    position: inherit;
-    overflow-y: scroll;
-    width: 16%;
-}
-
-.preset-selection{
-    border-bottom: 1px solid darkgray;
-    padding-bottom: .5rem;
-    padding-top: .5rem;
-    color: white;
-    text-decoration: none;
-}
-
-.preset-selection > a {
-    color: rgb(22, 110, 241);
-    text-decoration: none;
-}
-
-.preset-selection:hover {
-    cursor: pointer;
-}
-
-#dev_tools{
-    position: inherit;
-    bottom: .5rem;
-    background-color: rgb(30,30,30);
-}
 
 #newtier {
     width: 120px;
@@ -275,7 +302,8 @@ label[for=allow_editing] {
 #image_wrapper{
     min-width: calc(var(--boxes)*2);
     max-width: var(--tierwidth);
-    margin: auto;
+    margin-left: auto;
+    margin-right: auto;
     font-family: Verdana, Geneva, Tahoma, sans-serif;
     color:white;
 }
