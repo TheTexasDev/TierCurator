@@ -97,7 +97,7 @@ function get_relative_mousepos(ev){
 
 function get_tier_type(){
     if(allow_controls){
-        const type = ["tier","pyramid","matchup","opposite"][Number(document.getElementById("tier-type").value)]
+        const type = ["tier","pyramid","matchup","opposite","subtiers"][Number(document.getElementById("tier-type").value)]
         return type;
     }
     return template_type;
@@ -109,7 +109,12 @@ function tier_id_gen(){
     let identifier = ""
 
     for(var i = 0; i < id_length; i++){
-        identifier += text[Math.floor(Math.random()*text.length)-1]
+        identifier += text[Math.floor(Math.random()*text.length)]
+    }
+
+    if (document.getElementById(identifier) !== null){
+        // If there is an element with that id, try again.
+        identifier = tier_id_gen();
     }
 
     return identifier;
@@ -176,6 +181,10 @@ function add_tier(title,clr,add_to_tiers){
         add_to_tiers = true;
     }
 
+    let scalingInterval = 8; // At what interval text length to start decreasing the font size of the tier title
+    let scalingRate = 1/8; // How much to decrease the font size (%) by every interval
+    let minimumScale = 4/8; // The smallest font size allowed
+
     let newTier = document.createElement("div")
     newTier.className = "tier";
     newTier.id = tier_id_gen();
@@ -195,10 +204,15 @@ function add_tier(title,clr,add_to_tiers){
     if (type == "pyramid") tierTitle.className += " pyramid"
 
     tierTitle.style.backgroundColor = clr
-    tierTitle.setAttribute("ondblclick",`rmv_tier('${title}')`)
+    tierTitle.setAttribute("ondblclick",`rmv_tier('','${newTier.id}')`)
     let trueTierTitle = document.createElement("div")
     trueTierTitle.className = "tier-title-text"
     trueTierTitle.innerText = title.replace("%20"," ");
+    if(title.length > scalingInterval){
+        scaleDown = 1-(scalingRate*(Math.floor(title.length/scalingInterval)+1))
+        if (scaleDown < minimumScale) scaleDown = minimumScale
+        tierTitle.style.fontSize = scaleDown+"em";
+    }
     let tierContent = document.createElement("div");
     tierContent.className = "tier-column"
     
@@ -225,10 +239,15 @@ function add_tier(title,clr,add_to_tiers){
     
     tierList.appendChild(newTier);
 
-    try{
-        
+    try{ 
         document.getElementById('newtier').value = ""
-        document.getElementById('newcolor').value = ""
+        //document.getElementById('newcolor').value = "#6600ff"
+        // Set color input to a random color
+
+        const color_int_options = ["28","40","55","77","99","bb","cc","dd","ee","ff"]
+        const COLORGEN = "#"+color_int_options[Math.round(Math.random()*(color_int_options.length-1))].toString()+color_int_options[Math.round(Math.random()*(color_int_options.length-1))].toString()+color_int_options[Math.round(Math.random()*(color_int_options.length-1))].toString();
+        //console.log(debug(4,COLORGEN))
+        document.getElementById('newcolor').value = COLORGEN;
     }catch{
         console.log(debug(1,"controls disabled"));
     }
@@ -238,7 +257,8 @@ function add_tier(title,clr,add_to_tiers){
 }
 
 
-function rmv_tier(title){
+function rmv_tier(title,tier_id){
+
     if (!allow_controls){
         return; // controls disabled
     }
@@ -246,7 +266,7 @@ function rmv_tier(title){
     let match_index = 0;
     for(var row = 1; row < tierList.children.length; row++){
 
-        if(tierList.children[row].children[0].children[0].innerText === title){
+        if(tierList.children[row].id == tier_id || tierList.children[row].children[0].children[0].innerText === title){
             for(var column = 1; column < tierList.children[row].children.length; column++){
 
                 let tier_icons = tierList.children[row].children[column].children;
@@ -941,6 +961,40 @@ async function loadImageFromBlob(url) {
 }
 
 
+document.getElementById("image-location-toggle").addEventListener("change",() =>{
+    let use_side_images = document.getElementById("image-location-toggle").checked;
+    if (use_side_images){
+        sideImages();
+    }else{
+        normalImages();
+    }
+})
+
+function sideImages(){
+    let image_container = document.getElementById("images");
+    let image_counter = document.getElementById("check_loaded_images");
+    let sidebar = document.getElementById("side-bar1");
+    let dialogs = document.getElementsByClassName("side-dialog");
+
+    for(var i = 0; i < dialogs.length; i++){
+        dialogs[i].style.display = "none";
+    }
+
+    sidebar.insertBefore(image_counter,dialogs[0])
+    sidebar.insertBefore(image_container,dialogs[0])
+}
+
+function normalImages(){
+    let image_container = document.getElementById("images");
+    let og_area = document.getElementById("image_wrapper");
+    let dialogs = document.getElementsByClassName("side-dialog");
+
+    for(var i = 0; i < dialogs.length; i++){
+        dialogs[i].style.display = "block";
+    }
+
+    og_area.appendChild(image_container)
+}
 
 function urlify(url_version,returnit){
     url_version = url_version || "new"
@@ -1245,6 +1299,10 @@ function tier_change(){
         console.log(debug(2,"Convert to Tier List"))
         tierlistinate()
 
+    }else if (t_type == "subtiers"){
+        console.log(debug(2,"Convert to Sub-Tier TL"))
+        tierlist_subitize()
+
     }else if (t_type == "pyramid"){
         console.log(debug(2,"Convert to Pyramid"))
         pyramidify()
@@ -1286,6 +1344,38 @@ function tierlistinate(adjust_columns){
     document.getElementById("dialog_add_tier").innerHTML = "To create a new tier simply <b>press Add Tier</b> and it will use the selected color from the option next to it you also <i>need a tier name</i> by typing it into the textbox."
 }
 
+function tierlist_subitize(){
+    tierlistinate(true);
+    tier_column_count = 2;
+    create_header();
+    adjust_column_count(tier_column_count);
+    if(allow_controls){
+        document.getElementById("column-count").value = tier_column_count;
+    }
+
+
+    let currentTier = tierList.children[1]
+    
+    for(var i = 1; i < currentTier.children.length; i++){
+        currentTier.children[i].className += " sub-column";
+    }
+
+    let sector = document.createElement("div")
+    sector.className = "subTier-container"
+    let subtier1Title = document.createElement("div");
+    subtier1Title.className = "subTier"
+    subtier1Title.style.backgroundColor = currentTier.children[0].style.backgroundColor;
+    subtier1Title.innerText = "+"
+    let subtier2Title = document.createElement("div");
+    subtier2Title.className = "subTier"
+    subtier2Title.style.backgroundColor = currentTier.children[0].style.backgroundColor;
+    subtier2Title.innerText = "-"
+    
+    sector.append(subtier1Title);
+    sector.append(subtier2Title);
+
+    currentTier.insertBefore(sector,currentTier.children[1]);
+}
 
 function pyramidify(){
     tierList.innerHTML = "<div id='list-header'></div>"
@@ -1309,6 +1399,7 @@ function pyramidify(){
     /* Dialog Tutorial Changes */
     document.getElementById("dialog_add_tier").innerHTML = "To create a new tier simply <b>press Add Tier</b> and it will use the selected color from the option next to it you also <i>need a tier name</i> by typing it into the textbox."
 }
+
 
 
 function oppositize(){

@@ -1,5 +1,6 @@
 body {
     background-color: rgb(30,30,30);
+    overflow-y: scroll;
 }
 
 :root {
@@ -33,26 +34,81 @@ body {
     z-index: 25;
 }
 
-
 #tier-list.pyramid{
     border: var(--borders) solid transparent;
 }
 
 
-#side-bar1{
-    border: var(--borders) solid gray;
+#side-bar0{
     position: fixed;
-    width: 19%;
-    bottom: 0;
+    width: 20%;
     right: 0;
     top: 0;
-    padding: 4px;
+    bottom: 0;
     color: rgb(220,220,220);
     font-family: Verdana, Geneva, Tahoma, sans-serif;
     font-size: smaller;
-    overflow-y: scroll;
-    padding-bottom: 15rem;
+    border: var(--borders) solid gray;
 }
+
+
+#side-bar1{
+    right: 0;
+    top: 0;
+    padding: 4px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: 70%;
+    /*height: max-content;
+    border-bottom: var(--borders) solid gray;*/
+}
+
+#bottom-section {
+    border-top: var(--borders) solid gray;
+    border-bottom: var(--borders) solid gray;
+    background-color: rgb(30,30,30);
+    padding: 4px;
+    /*margin-top: 5px;
+    top: auto;
+    bottom: 0;
+    height: fit-content;*/
+    height: 30%;
+}
+
+
+#presets-list {
+    background-color: rgb(30,30,30);
+    border: 1px solid gray;
+    max-height: 8rem;
+    overflow-y: scroll;
+    margin-bottom: 1rem;
+    right: 0;
+}
+
+.preset-selection{
+    border-bottom: 1px solid darkgray;
+    padding-bottom: .5rem;
+    padding-top: .5rem;
+    color: white;
+    text-decoration: none;
+}
+
+.preset-selection > a {
+    color: rgb(22, 110, 241);
+    text-decoration: none;
+}
+
+.preset-selection > a:hover {
+    cursor: pointer;
+    color: rgb(16, 76, 165);
+}
+
+#dev_tools{
+    border: 1px solid gray;
+    bottom: .5rem;
+    background-color: rgb(30,30,30);
+}
+
 
 
 #mobile-disclaimer {
@@ -107,8 +163,14 @@ button {
     border-right: 2px solid #5f5f5f;
 }
 
+
+
 input[type='file']{
     display:none;
+}
+
+*[floatright]{
+    float: right;
 }
 
 .file-upload-label {
@@ -132,39 +194,6 @@ input[type='file']{
 
 label[for=allow_editing] {
     color: white;
-}
-
-#presets-list {
-    background-color: rgb(30,30,30);
-    border: 1px solid gray;
-    bottom: 4rem;
-    max-height: 8rem;
-    position: inherit;
-    overflow-y: scroll;
-    width: 16%;
-}
-
-.preset-selection{
-    border-bottom: 1px solid darkgray;
-    padding-bottom: .5rem;
-    padding-top: .5rem;
-    color: white;
-    text-decoration: none;
-}
-
-.preset-selection > a {
-    color: rgb(22, 110, 241);
-    text-decoration: none;
-}
-
-.preset-selection:hover {
-    cursor: pointer;
-}
-
-#dev_tools{
-    position: inherit;
-    bottom: .5rem;
-    background-color: rgb(30,30,30);
 }
 
 #newtier {
@@ -201,6 +230,11 @@ label[for=allow_editing] {
     border-right: var(--borders) solid gray;
 }
 
+.tier-column.sub-column {
+    min-height: calc(var(--boxes) / 3);
+    max-height: calc(var(--boxes) / 2);
+}
+
 .tier-column.pyramid {
     max-width: var(--boxes);
     text-align: center;
@@ -222,6 +256,24 @@ label[for=allow_editing] {
 
 .tier-title.pyramid {
     border-left: var(--borders) solid gray;
+}
+
+.subTier-container{
+    height: var(--boxes); /* For some halfing it makes the width MUCH smaller than half the box */
+    aspect-ratio: .5;
+    border-top: var(--borders) solid gray;
+    border-right: var(--borders) solid gray;
+}
+
+.subTier{
+    width: 98%;
+    aspect-ratio: 1;
+    border: 1px solid gray;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    overflow: hidden;
 }
 
 #list-header {
@@ -275,7 +327,8 @@ label[for=allow_editing] {
 #image_wrapper{
     min-width: calc(var(--boxes)*2);
     max-width: var(--tierwidth);
-    margin: auto;
+    margin-left: auto;
+    margin-right: auto;
     font-family: Verdana, Geneva, Tahoma, sans-serif;
     color:white;
 }
