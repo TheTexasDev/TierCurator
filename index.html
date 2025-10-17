@@ -79,15 +79,16 @@
                 <div id="controls-modifiers">
                     <input title="tiercolor" id="newcolor" type="color"/>
                     <input title="tiernames" id="newtier" type="text" placeholder="New Tier Name"/>
-                    <button onclick="create_new_tier()" id="addtier" style="float:right;">Add Tier</button>
+                    <button onclick="create_new_tier()" id="addtier" floatright>Add Tier</button>
                     <br>
                     <input id="column-count" type="range" min="1" max="5" value="2" title="tiercolumns"/>
-                    <button onclick="prompt_addition()" style="float:right;">Add Icon</button>
+                    <button onclick="prompt_addition()" floatright>Add Icon</button>
                     <br>
                     <input title="Allow Edits" type="checkbox" id="allow_editing" checked/>
                     <label for="allow_editing">Allow Changes</label>
-                    <select title="tier-type" id="tier-type" style="float:right;" onchange="tier_change()" autocomplete="off">
+                    <select title="tier-type" id="tier-type" floatright onchange="tier_change()" autocomplete="off">
                         <option value="0">Tier List</option>
+                        <option value="4" disabled>Sub Tiers</option>
                         <option value="1">Pyramid</option>
                         <option value="2" disabled>Matchup</option>
                         <option value="3">Opposite</option>
@@ -112,7 +113,7 @@
 
         <div id="side-bar0">
             <div id="side-bar1">
-                Tier Curator v10<br>
+                Tier Curator v11<br>
 
                 <p class="side-dialog">
                     Click the <b>Add Icon</b> button to start adding images.<br>

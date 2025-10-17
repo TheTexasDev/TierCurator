@@ -97,7 +97,7 @@ function get_relative_mousepos(ev){
 
 function get_tier_type(){
     if(allow_controls){
-        const type = ["tier","pyramid","matchup","opposite"][Number(document.getElementById("tier-type").value)]
+        const type = ["tier","pyramid","matchup","opposite","subtiers"][Number(document.getElementById("tier-type").value)]
         return type;
     }
     return template_type;
@@ -109,7 +109,12 @@ function tier_id_gen(){
     let identifier = ""
 
     for(var i = 0; i < id_length; i++){
-        identifier += text[Math.floor(Math.random()*text.length)-1]
+        identifier += text[Math.floor(Math.random()*text.length)]
+    }
+
+    if (document.getElementById(identifier) !== null){
+        // If there is an element with that id, try again.
+        identifier = tier_id_gen();
     }
 
     return identifier;
@@ -236,7 +241,13 @@ function add_tier(title,clr,add_to_tiers){
 
     try{ 
         document.getElementById('newtier').value = ""
-        document.getElementById('newcolor').value = ""
+        //document.getElementById('newcolor').value = "#6600ff"
+        // Set color input to a random color
+
+        const color_int_options = ["28","40","55","77","99","bb","cc","dd","ee","ff"]
+        const COLORGEN = "#"+color_int_options[Math.round(Math.random()*(color_int_options.length-1))].toString()+color_int_options[Math.round(Math.random()*(color_int_options.length-1))].toString()+color_int_options[Math.round(Math.random()*(color_int_options.length-1))].toString();
+        //console.log(debug(4,COLORGEN))
+        document.getElementById('newcolor').value = COLORGEN;
     }catch{
         console.log(debug(1,"controls disabled"));
     }
@@ -1288,6 +1299,10 @@ function tier_change(){
         console.log(debug(2,"Convert to Tier List"))
         tierlistinate()
 
+    }else if (t_type == "subtiers"){
+        console.log(debug(2,"Convert to Sub-Tier TL"))
+        tierlist_subitize()
+
     }else if (t_type == "pyramid"){
         console.log(debug(2,"Convert to Pyramid"))
         pyramidify()
@@ -1329,6 +1344,38 @@ function tierlistinate(adjust_columns){
     document.getElementById("dialog_add_tier").innerHTML = "To create a new tier simply <b>press Add Tier</b> and it will use the selected color from the option next to it you also <i>need a tier name</i> by typing it into the textbox."
 }
 
+function tierlist_subitize(){
+    tierlistinate(true);
+    tier_column_count = 2;
+    create_header();
+    adjust_column_count(tier_column_count);
+    if(allow_controls){
+        document.getElementById("column-count").value = tier_column_count;
+    }
+
+
+    let currentTier = tierList.children[1]
+    
+    for(var i = 1; i < currentTier.children.length; i++){
+        currentTier.children[i].className += " sub-column";
+    }
+
+    let sector = document.createElement("div")
+    sector.className = "subTier-container"
+    let subtier1Title = document.createElement("div");
+    subtier1Title.className = "subTier"
+    subtier1Title.style.backgroundColor = currentTier.children[0].style.backgroundColor;
+    subtier1Title.innerText = "+"
+    let subtier2Title = document.createElement("div");
+    subtier2Title.className = "subTier"
+    subtier2Title.style.backgroundColor = currentTier.children[0].style.backgroundColor;
+    subtier2Title.innerText = "-"
+    
+    sector.append(subtier1Title);
+    sector.append(subtier2Title);
+
+    currentTier.insertBefore(sector,currentTier.children[1]);
+}
 
 function pyramidify(){
     tierList.innerHTML = "<div id='list-header'></div>"
@@ -1352,6 +1399,7 @@ function pyramidify(){
     /* Dialog Tutorial Changes */
     document.getElementById("dialog_add_tier").innerHTML = "To create a new tier simply <b>press Add Tier</b> and it will use the selected color from the option next to it you also <i>need a tier name</i> by typing it into the textbox."
 }
+
 
 
 function oppositize(){

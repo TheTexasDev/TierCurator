@@ -34,7 +34,6 @@ body {
     z-index: 25;
 }
 
-
 #tier-list.pyramid{
     border: var(--borders) solid transparent;
 }
@@ -80,7 +79,6 @@ body {
 #presets-list {
     background-color: rgb(30,30,30);
     border: 1px solid gray;
-    bottom: 4rem;
     max-height: 8rem;
     overflow-y: scroll;
     margin-bottom: 1rem;
@@ -100,8 +98,9 @@ body {
     text-decoration: none;
 }
 
-.preset-selection:hover {
+.preset-selection > a:hover {
     cursor: pointer;
+    color: rgb(16, 76, 165);
 }
 
 #dev_tools{
@@ -170,6 +169,10 @@ input[type='file']{
     display:none;
 }
 
+*[floatright]{
+    float: right;
+}
+
 .file-upload-label {
     border-radius: 0;
     font-family: monospace;
@@ -192,7 +195,6 @@ input[type='file']{
 label[for=allow_editing] {
     color: white;
 }
-
 
 #newtier {
     width: 120px;
@@ -228,6 +230,11 @@ label[for=allow_editing] {
     border-right: var(--borders) solid gray;
 }
 
+.tier-column.sub-column {
+    min-height: calc(var(--boxes) / 3);
+    max-height: calc(var(--boxes) / 2);
+}
+
 .tier-column.pyramid {
     max-width: var(--boxes);
     text-align: center;
@@ -249,6 +256,24 @@ label[for=allow_editing] {
 
 .tier-title.pyramid {
     border-left: var(--borders) solid gray;
+}
+
+.subTier-container{
+    height: var(--boxes); /* For some halfing it makes the width MUCH smaller than half the box */
+    aspect-ratio: .5;
+    border-top: var(--borders) solid gray;
+    border-right: var(--borders) solid gray;
+}
+
+.subTier{
+    width: 98%;
+    aspect-ratio: 1;
+    border: 1px solid gray;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    overflow: hidden;
 }
 
 #list-header {
