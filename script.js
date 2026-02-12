@@ -331,6 +331,7 @@ function create_header(){
         }
 
         new_clone.innerText = column_pwr;
+        new_clone.contentEditable = "true"
         header_container.append(new_clone);
     }
     
