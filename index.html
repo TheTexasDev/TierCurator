@@ -19,6 +19,12 @@
     </head>
     <body>
 
+        
+        <div id="image_context_menu">
+            <button id="duplicate-icon" onclick="duplicate_menu()">Duplicate</button><br>
+            <button id="remove-icon" onclick="remove_menu()">Remove</button>
+        </div>
+
         <div id="adding_wrapper">
             <div id="additional_dialog">
                 <button onclick="unprompt()" class="close_additional">X</button><br>
@@ -113,14 +119,14 @@
 
         <div id="side-bar0">
             <div id="side-bar1">
-                Tier Curator v11<br>
+                Tier Curator v12<br>
 
                 <p class="side-dialog">
                     Click the <b>Add Icon</b> button to start adding images.<br>
                     <b>Double click</b> a tier's colorful title to remove it.
                     Likewise, double click an Icon to remove it. 
                     If an Icon is removed while in the tier list, it will be <b>moved</b> to the unused box.<br>
-                    <b>Double click it again</b> while in the unused box to remove it completely from the page and the template.
+                    <b>Right Click</b> an icon in the unused image area to remove or duplicate the icon.
                 </p>
 
                 <p class="side-dialog" id="dialog_add_tier">
@@ -159,7 +165,7 @@
                     <legend>Dev Tools</legend>
                     <button onclick="dev_get_tiers()">Tier Data</button>
                     <button onclick="dev_get_icons()">Icon Data</button>
-                    <input title="Sidebar Images" id="image-location-toggle" type="checkbox" autocomplete="on"/>
+                    <input title="Sidebar Images" id="image-location-toggle" type="checkbox" autocomplete="off"/>
                     <label for="image-location-toggle">Sidebar Images</label>
                     <!-- <a href="https://cash.app/$AnAverageFella" target="_blank" rel="noopener"><button id="cashapplink">CashApp</button></a> -->
                     <br>

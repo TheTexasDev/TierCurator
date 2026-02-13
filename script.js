@@ -653,6 +653,51 @@ function drop_handler(eve){
     }
 }
 
+document.getElementById("image_context_menu").addEventListener("mouseleave", () => {
+    let images_menu = document.getElementById("image_context_menu");
+    images_menu.style.display = "none";
+});
+
+
+document.getElementById("images").addEventListener("contextmenu",(eve) => {
+    eve.preventDefault();
+    let boundary = document.body.getBoundingClientRect()
+    let images_menu = document.getElementById("image_context_menu");
+
+    if (!eve.target.id.startsWith("img")){
+        return; // If the user didn't right click an image lets not use it.
+    }
+
+    selected_image_for_menu = eve.target.id;
+
+    images_menu.style.left = eve.clientX-boundary.x-5 + "px";
+    images_menu.style.top = eve.clientY-boundary.y-5 + "px";
+    images_menu.style.display = "block";
+    //console.log(eve.clientY)
+});
+
+
+function duplicate_menu(){
+    if(selected_image_for_menu == ""){
+        console.log("No image selected for duplication.")
+        return;
+    }
+
+    addimg("source",document.getElementById(selected_image_for_menu).src)
+    document.getElementById("image_context_menu").style.display = "none";
+    selected_image_for_menu = "";
+}
+
+function remove_menu(){
+    if(selected_image_for_menu == ""){
+        console.log("No image selected for duplication.")
+        return;
+    }
+    rmvimg(selected_image_for_menu)
+    selected_image_for_menu = "";
+    document.getElementById("image_context_menu").style.display = "none";
+}
+
 function prompt_addition(){
     document.getElementById("adding_wrapper").style.display = "flex"
 }
