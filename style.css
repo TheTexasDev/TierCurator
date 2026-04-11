@@ -7,6 +7,7 @@ body {
     --boxes: 100px;
     --borders: 0.15rem;
     --tierwidth: 1000px;
+    --subtiers: 2;
 }
 
 #main-content {
@@ -35,7 +36,7 @@ body {
 }
 
 #tier-list.pyramid{
-    border: var(--borders) solid transparent;
+    border: none;
 }
 
 
@@ -212,10 +213,20 @@ label[for=allow_editing] {
 
 .tier {
     min-height: var(--boxes);
+    max-height: var(--boxes);
     min-width: var(--boxes);
     max-width: 100%;
     display: flex;
     background: rgb(30,30,30);
+
+}
+
+.gTier {
+    display: grid !important;
+    column-count: 3;
+    grid-auto-rows: 2;
+    grid-template-rows: .5fr .5fr;
+    grid-template-columns: 1fr .5fr auto;
 }
 
 .tier-column {
@@ -232,16 +243,40 @@ label[for=allow_editing] {
     border-right: var(--borders) solid gray;
 }
 
-.tier-column.sub-column {
-    min-height: calc(var(--boxes) / 3);
-    max-height: calc(var(--boxes) / 2);
+.sub-column {
+    border-top: calc(var(--borders)) solid gray;
+    border-right: none;
+    min-width: calc(9 * var(--boxes));
+    min-height: calc(var(--boxes) / var(--subtiers) - var(--borders));
+    max-height: calc(var(--boxes) / var(--subtiers) - var(--borders));
+}
+
+.gTop {
+    grid-row: 1;
+    grid-column: 3;
+}
+
+.gBottom {
+    grid-row: var(--subtiers);
+    grid-column: 3;
+    overflow-y: hidden;
+}
+
+.sub-column.gTop {
+    border-bottom: calc(var(--borders)) solid gray;
+    /*margin-top: calc(0px - var(--borders));*/
+}
+
+.sub-column.gBottom {
+    border-top: calc(var(--borders)) solid gray;
+    margin-top: calc(0px - var(--borders) - var(--boxes)/2);
 }
 
 .tier-column.pyramid {
     max-width: var(--boxes);
     text-align: center;
     overflow: hidden;
-    border-bottom: var(--borders) solid gray;
+    /*border-bottom: var(--borders) solid gray;*/
 }
 
 .tier-title {
@@ -254,6 +289,12 @@ label[for=allow_editing] {
     justify-content: center;
     align-items: center;
     text-align: center;
+
+    /* This is styling for the sub-tier tier type. */
+    grid-row: 1;
+    grid-row-start: 1;
+    grid-row-end: var(--subtiers);
+    grid-column: 1;
 }
 
 .tier-title.pyramid {
@@ -265,12 +306,14 @@ label[for=allow_editing] {
     aspect-ratio: .5;
     border-top: var(--borders) solid gray;
     border-right: var(--borders) solid gray;
+    grid-column: 2;
+    grid-row: 1;
+    grid-row-start: 1;
+    grid-row-end: var(--subtiers);
 }
 
 .subTier{
-    width: 98%;
-    aspect-ratio: 1;
-    border: 1px solid gray;
+    min-height: calc(var(--boxes) / var(--subtiers) - var(--borders));
     display: flex;
     justify-content: center;
     align-items: center;
@@ -278,10 +321,17 @@ label[for=allow_editing] {
     overflow: hidden;
 }
 
+.subTier.gTop {
+    border-bottom: calc(var(--borders)) solid gray;
+}
+.subTier.gBottom {
+    padding-bottom: calc(var(--borders));
+}
+
 #list-header {
     display: flex;
-    line-height: calc(var(--boxes) / 2);
-    height: calc(var(--boxes) / 2);
+    line-height: calc(var(--boxes) / var(--subtiers));
+    height: calc(var(--boxes) / var(--subtiers));
     background: rgb(30,30,30);
 }
 

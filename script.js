@@ -27,7 +27,7 @@ var template_type = "tier";
 let tierList = document.getElementById("tier-list")
 let imgeList = document.getElementById("images")
 
-let tiers_for_linking = []
+let tiers_for_linking = [];
 let images_for_linking = []
 
 const debug_level = 1; // Debug level, if any debug logs are sent with a level less than this one they will be logged
@@ -187,6 +187,7 @@ function add_tier(title,clr,add_to_tiers){
 
     let newTier = document.createElement("div")
     newTier.className = "tier";
+    if(type == "subtiers")newTier.className += " gTier"
     newTier.id = tier_id_gen();
     newTier.setAttribute("ondragstart",'drag(event)')
     newTier.setAttribute("ondragover",'allowDrop(event)')
@@ -209,14 +210,19 @@ function add_tier(title,clr,add_to_tiers){
     trueTierTitle.className = "tier-title-text"
     trueTierTitle.innerText = title.replace("%20"," ");
     if(title.length > scalingInterval){
+        // Change size of font if the title is tooo big.
         scaleDown = 1-(scalingRate*(Math.floor(title.length/scalingInterval)+1))
-        if (scaleDown < minimumScale) scaleDown = minimumScale
+        if (scaleDown < minimumScale) scaleDown = minimumScale;
+        tierTitle.setAttribute('fontscaling',scaleDown+"em")
         tierTitle.style.fontSize = scaleDown+"em";
+    }else{
+        tierTitle.setAttribute('fontscaling',"1em")
     }
     let tierContent = document.createElement("div");
     tierContent.className = "tier-column"
     
     if (type == "pyramid") tierContent.className += " pyramid"
+    //if (type == "subtiers")tierContent.className += " sub-column"
     /*tierContent.setAttribute("ondragover",'allowDrop(event)')
     tierContent.setAttribute("ondrop",'drop_handler(event)')
     tierContent.setAttribute("ondblclick",`rmv_tier('${title}')`)*/
@@ -229,9 +235,37 @@ function add_tier(title,clr,add_to_tiers){
     tierTitle.append(trueTierTitle)
     if (type == "pyramid") newTier.append(paddingdivs.cloneNode(true))
     newTier.append(tierTitle)
+    
+    if(type == "subtiers"){
+        let sector = document.createElement("div")
+        sector.className = "subTier-container"
+        let subtier1Title = document.createElement("div");
+        subtier1Title.className = "subTier gTop"
+        subtier1Title.style.backgroundColor = clr;
+        subtier1Title.innerText = "+"
+        let subtier2Title = document.createElement("div");
+        subtier2Title.className = "subTier gBottom"
+        subtier2Title.style.backgroundColor = clr;
+        subtier2Title.innerText = "-"
+        
+        sector.append(subtier1Title);
+        sector.append(subtier2Title);
+
+        newTier.append(sector)
+    }
+
+    if(type == "subtiers") tierContent.className += " sub-column"
 
     for(let i = 0; i < tier_column_count; i++){
-        newTier.append(tierContent.cloneNode(true))
+        let new_one = tierContent.cloneNode(true)
+        if (type == "subtiers"){
+            if (i == 0){
+                new_one.className += " gTop"
+            }else{
+                new_one.className += " gBottom"
+            }
+        }
+        newTier.append(new_one)
     }
 
     if (type == "pyramid") newTier.append(paddingdivs.cloneNode(true))
@@ -258,7 +292,6 @@ function add_tier(title,clr,add_to_tiers){
 
 
 function rmv_tier(title,tier_id){
-
     if (!allow_controls){
         return; // controls disabled
     }
@@ -267,7 +300,9 @@ function rmv_tier(title,tier_id){
     for(var row = 1; row < tierList.children.length; row++){
 
         if(tierList.children[row].id == tier_id || tierList.children[row].children[0].children[0].innerText === title){
-            for(var column = 1; column < tierList.children[row].children.length; column++){
+            start_column = 1;
+            if (get_tier_type() == "subtiers")start_column = 2;
+            for(var column = start_column; column < tierList.children[row].children.length; column++){
 
                 let tier_icons = tierList.children[row].children[column].children;
                 
@@ -293,7 +328,7 @@ function rmv_tier(title,tier_id){
 
 function create_header(){
     const t_type = get_tier_type()
-    if (t_type != "tier") return;
+    if (!t_type.includes("tier")) return;
 
     let header_container = document.getElementById("list-header");
     header_container.innerHTML = `<div id="list-corner">Tier Curator</div>`
@@ -302,7 +337,7 @@ function create_header(){
     newColumn.className = "tier-column-title";
 
     
-    if (tier_column_count <= 1){
+    if (tier_column_count <= 1 || t_type == "subtiers"){
         newColumn.innerText = "";
         header_container.append(newColumn);
         return;
@@ -442,7 +477,8 @@ function read_url(actually_do_it){
         console.log(debug(3,"Pako URL"))
         params = pako.ungzip(params.split(","),{to:"string"})
     }
-    //console.log(params)
+
+    //console.log(debug(6,params))
 
     let t_type = "tier";
     if (params.includes("&tctype")){
@@ -512,7 +548,12 @@ function read_url(actually_do_it){
         allow_controls = false;
     }
 
-    if (t_type == "opposite"){
+    if (t_type == "subtiers"){        
+        tier_column_count = 2;
+        //tierlistinate(false);
+        tierlist_subitize();
+
+    }else if (t_type == "opposite"){
         oppositize()
     }else if (t_type == "pyramid"){
         pyramidify()
@@ -530,8 +571,9 @@ function read_url(actually_do_it){
         tierlistinate()
     }
 
+
     if(allow_controls){
-        document.getElementById("tier-type").value = ["tier","pyramid","matchup","opposite"].indexOf(t_type).toString()
+        document.getElementById("tier-type").value = ["tier","pyramid","matchup","opposite","subtiers"].indexOf(t_type).toString()
         tier_column_count = Number(document.getElementById("column-count").value);
     }
     
@@ -567,7 +609,7 @@ function drop_handler(eve){
     
     
     
-    if(src_element.className == "tier"){ // Moving a tier row
+    if(src_element.className.includes("tier")){ // Moving a tier row. Otherwise moving an image.
         
         let element_of_hovered = null; // the div of the target row
         let position_of_grabbed = 0;
@@ -580,8 +622,14 @@ function drop_handler(eve){
             element_of_hovered = eve.target.parentElement.parentElement;
             //element_of_hovered.parentElement.insertBefore(src_element,element_of_hovered);
 
+        }else if(eve.target.className == "subTier-container"){
+            element_of_hovered = eve.target.parentElement;
+
+        }else if(eve.target.className.includes("subTier")){
+            element_of_hovered = eve.target.parentElement.parentElement;
+
         }else{
-            //console.log(eve.target)
+            //console.log(eve.target.className)
             return
         }
         
@@ -631,7 +679,10 @@ function drop_handler(eve){
             }else{
                 return;
             }
-
+        
+        }else if(eve.target.className.includes("sub-column")){
+            src_element.style.height = "100%"//new getBoxSize().int/2 + "px"
+            eve.target.append(src_element);
         }else{
             eve.target.append(src_element);
         }
@@ -715,7 +766,20 @@ function unoutput(){
     document.getElementById("output_image_wrapper").style.display = "none"
 }
 
+/**
+ * 
+ * @param {Number} paragraph_id Which index to replace
+ * @param {String} text 
+ */
+function change_tutorial(paragraph_id, text){
+    let target = document.getElementsByClassName("side-dialog")[paragraph_id]
+    if(target.innerHTML == text)return;
+    target.innerHTML = text;
+}
 
+/**
+ * Removes all images from the list.
+ */
 function reset_tier_list(){
     //console.log("Resetting List....")
     const img_tag_count = Array.prototype.slice.call( document.getElementsByTagName("img") )
@@ -948,10 +1012,18 @@ document.getElementById("tier-list").addEventListener("contextmenu", e => {
 
 document.getElementById("column-count").addEventListener('change', e => {
     new_count = Number(document.getElementById("column-count").value);
-    adjust_column_count(new_count)
+    let t_type = get_tier_type()
 
-    tier_column_count = new_count;
-    create_header()
+    if (t_type == "tier"){
+        adjust_column_count(new_count)
+
+        tier_column_count = new_count;
+        create_header()
+
+    }/*else if(t_type == "subtiers"){
+        document.documentElement.style.setProperty("--subtiers",new_count);
+
+    }*/
 })
 
 
@@ -973,6 +1045,12 @@ document.getElementById("img-link")..addEventListener("change",() => {
 document.getElementById("img-folder").addEventListener("change",() => {
     update_showing_queue("Detected folder, unknown image count :3");
 })
+
+
+document.getElementById("export-upscale-amount").addEventListener('change', e => {
+    document.getElementById("upscale-value").innerText = "Export "+document.getElementById("export-upscale-amount").value+"x";
+})
+
 
 function update_showing_queue(text){
     document.getElementById("images_ready").innerText = text;
@@ -1055,8 +1133,8 @@ function urlify(url_version,returnit){
     
     if(t_type == "tier") url_additions += ("&tccolumns="+tier_column_count)
 
-    if (t_type == "tier" || t_type == "pyramid"){
-        console.log(debug(4,"Tier type is tier or pyramid, getting tiers."))
+    if (t_type == "tier" || t_type == "pyramid" || t_type == "subtiers"){
+        console.log(debug(4,"Tier type has tiers so lets get those."))
 
         for(let i = 0; i < tiers_for_linking.length; i++){
             //url_additions += "&tctier="+tiers_for_linking[i][0]+"+"+tiers_for_linking[i][1].split("#")[1]
@@ -1243,15 +1321,51 @@ Element.prototype.remove = function() {
 }
 
 
+function getBoxSize(){
+    let raw = window.getComputedStyle(document.body).getPropertyValue('--boxes');
+    this.int = Number(raw.match(/\d*/))
+    return raw
+}
+
+/**
+ * changes the css variable --boxes
+ * returns the old value
+ * @param {number} newsize 
+ */
+function changeBoxSize(newsize){
+    let boxes = getBoxSize()
+    //let raw_int = Number(boxes.split("px")[0])
+    document.documentElement.style.setProperty("--boxes",newsize+"px");
+    return boxes;
+}
+
 
 function makepng(){
     const t_type = get_tier_type()
 
-    if (t_type != "opposite") document.documentElement.style.setProperty("--boxes","200px");
+    const origin_box = new getBoxSize().int
+    const upscale_amount = document.getElementById("export-upscale-amount").value;
+    if (t_type != "opposite") changeBoxSize(origin_box*upscale_amount);
     //document.documentElement.style.setProperty("--tierwidth","fit-content")
     //let max_in_row = 12
     let boxes = Number(document.documentElement.style.getPropertyValue('--boxes').split("px")[0])
     let counts = document.getElementsByClassName("tier-title-text")
+
+    const tiers = document.getElementsByClassName("tier-title")
+    const subTiers = document.getElementsByClassName("subTier")
+    const columnHeaders = document.getElementsByClassName("tier-column-title")
+
+    for(var i = 0; i < tiers.length; i++){
+        tiers[i].style.fontSize = upscale_amount*Number(tiers[i].getAttribute('fontscaling').split("em")[0]) + "em"
+    }
+    for(var i = 0; i < subTiers.length; i++){
+        subTiers[i].style.fontSize = upscale_amount + "em"
+    }
+    for(var i = 0; i < columnHeaders.length; i++){
+        columnHeaders[i].style.fontSize = upscale_amount + "em"
+    }
+    // they call me john loop
+
 
     /*
     Sometimes the Tier Titles are pushed down one tier and leave a blank one on top.
@@ -1302,6 +1416,16 @@ function makepng(){
     document.documentElement.style.setProperty("--boxes","100px");
     tierList.style.width = "var(--tierwidth)";
     tierList.style.maxWidth = "var(--tierwidth)";
+    for(var i = 0; i < tiers.length; i++){
+        tiers[i].style.fontSize = tiers[i].getAttribute('fontscaling')
+    }
+    for(var i = 0; i < subTiers.length; i++){
+        subTiers[i].style.fontSize = "1em"
+    }
+    for(var i = 0; i < columnHeaders.length; i++){
+        columnHeaders[i].style.fontSize = "1em"
+    }
+
 
     /* This is useless unless that unneeded code above is uncommented
     for (var x = 0; x < counts.length; x++) {
@@ -1339,7 +1463,15 @@ function tier_change(){
     const t_type = get_tier_type();
     console.log(debug(3,"Got Tier Type: ",t_type,"type: ",typeof t_type))
     reset_tier_list();
+    //changeBoxSize(100)
     console.log(debug(4,"Resetted List"))
+
+    /* Reset tutorial text. This is the default text for a default tier list. */
+    change_tutorial(0,"Click the <b>Add Icon</b> button to start adding images.<br><b>Double click</b> a tier's colorful title to remove it.Likewise, double click an Icon to remove it. If an Icon is removed while in the tier list, it will be <b>moved</b> to the unused box.<br><b>Right Click</b> an icon in the unused image area to remove or duplicate the icon.")
+    change_tutorial(1,"To create a new tier simply <b>press Add Tier</b> and it will use the selected color from the option next to it you also <i>need a tier name</i> by typing it into the textbox.")
+    change_tutorial(2,"You can move a tier by grabbing the title of it the tier and dragging it into onto the tier you want to move it to.")
+    change_tutorial(3,"When adding an Icon, you can use images from your PC files, or a web link.<br>You can <i>choose what shape</i> the image is shown as on the tier list.<b>Square</b> will squish the image into a square.<b>Circle</b> will squish the image into a square, but round the corners.<b>Freeform</b> will shorten the height of the image to fit, but will keep the aspect ratio of the image.")
+    change_tutorial(4,"Exporting a tier list as URL will create a permalink that can be shared with others. The link will lead them back to this site using the same tiers and images you provided.<br>Due to limitations <i>only web link images can be saved to a template</i><br>Exporting a tier list as ZIP will create a .zip file containing all the Icons and Tiers which can be shared.<br>Optionally, you can toggle if whoever uses the permalink can modify tiers or Icon list by clicking the <b>Allow Changes</b> option")
 
     if (t_type == "tier"){
         console.log(debug(2,"Convert to Tier List"))
@@ -1386,42 +1518,27 @@ function tierlistinate(adjust_columns){
         }
     }
 
-    /* Dialog Tutorial Changes */
-    document.getElementById("dialog_add_tier").innerHTML = "To create a new tier simply <b>press Add Tier</b> and it will use the selected color from the option next to it you also <i>need a tier name</i> by typing it into the textbox."
+    /* Change dialog tutorial */
+    change_tutorial(2,"You can move a tier by grabbing the title of it the tier and dragging it into onto the tier you want to move it to.<br>You can edit the <b>column header</b> and add custom text.")
 }
 
 function tierlist_subitize(){
-    tierlistinate(true);
+    if(allow_controls){
+        document.getElementById("column-count").value = 2;
+        document.getElementById("column-count").disabled = true;
+    }
+    tierList.className = ""
+    tierList.innerHTML = "<div id='list-header'></div>"
+
     tier_column_count = 2;
     create_header();
-    adjust_column_count(tier_column_count);
-    if(allow_controls){
-        document.getElementById("column-count").value = tier_column_count;
+
+    for(var i = 0; i < tiers_for_linking.length; i++){
+        add_tier(tiers_for_linking[i][0],tiers_for_linking[i][1],false);
     }
 
-
-    let currentTier = tierList.children[1]
-    
-    for(var i = 1; i < currentTier.children.length; i++){
-        currentTier.children[i].className += " sub-column";
-    }
-
-    let sector = document.createElement("div")
-    sector.className = "subTier-container"
-    let subtier1Title = document.createElement("div");
-    subtier1Title.className = "subTier"
-    subtier1Title.style.backgroundColor = currentTier.children[0].style.backgroundColor;
-    subtier1Title.innerText = "+"
-    let subtier2Title = document.createElement("div");
-    subtier2Title.className = "subTier"
-    subtier2Title.style.backgroundColor = currentTier.children[0].style.backgroundColor;
-    subtier2Title.innerText = "-"
-    
-    sector.append(subtier1Title);
-    sector.append(subtier2Title);
-
-    currentTier.insertBefore(sector,currentTier.children[1]);
 }
+
 
 function pyramidify(){
     tierList.innerHTML = "<div id='list-header'></div>"
@@ -1441,12 +1558,7 @@ function pyramidify(){
     tier_column_count = tierList.children.length;
     //adjust_column_count(tier_column_count);
 
-
-    /* Dialog Tutorial Changes */
-    document.getElementById("dialog_add_tier").innerHTML = "To create a new tier simply <b>press Add Tier</b> and it will use the selected color from the option next to it you also <i>need a tier name</i> by typing it into the textbox."
 }
-
-
 
 function oppositize(){
     tierList.className = ""
@@ -1492,6 +1604,6 @@ function oppositize(){
     document.getElementById("full-graph").appendChild(bottom_opp)
     document.getElementById("full-graph").appendChild(left_opp)
 
-     /* Dialog Tutorial Changes */
-     document.getElementById("dialog_add_tier").innerHTML = "Changing the <b>tier title</b> will change the top scale. Changing it again will change the right scale, then bottom, then left, then back to the top scale."
+    /* Dialog Tutorial Changes */
+    change_tutorial(1,"Changing the <b>tier title</b> will change the top scale. Changing it again will change the right scale, then bottom, then left, then back to the top scale.")
 }
