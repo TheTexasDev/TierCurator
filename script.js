@@ -30,7 +30,7 @@ let imgeList = document.getElementById("images")
 let tiers_for_linking = [];
 let images_for_linking = []
 
-const debug_level = 1; // Debug level, if any debug logs are sent with a level less than this one they will be logged
+const debug_level = 100; // Debug level, if any debug logs are sent with a level less than this one they will be logged
 
 
 
@@ -451,9 +451,39 @@ function read_url(actually_do_it){
 
     let params = url.slice(url.indexOf("?")+1,url.length)
     //console.log(params)
+    let permaversion = false
+    if (params.startsWith("v5")){
+        // version five, hyperlink compress before pako
+        permaversion = "v5" 
+    }else if (params.startsWith("v4")){
+        // version four, compressed pako
+        permaversion = "v4"
+    }else if (!params.includes("&tc")){
+        // version three, base pako
+        permaversion = "v3"
+    }
 
-    // version four, compressed pako
-    if (params.startsWith("v4")){
+    if (permaversion == "v5"){
+        console.log(debug(3,"HLCompressBase62Pako"))
+        params = params.slice(2)
+        let unbased_pako = "";
+
+        params.split("-").forEach(sector => {
+            let base10num = fromBase62(sector).toString();
+            if (base10num.length > 3){
+                unbased_pako += base10num.substring(0,3)+","+base10num.substring(3)+","
+            }else{
+                unbased_pako += base10num+",";
+            }
+        });
+
+        unbased_pako = unbased_pako.substring(0,unbased_pako.length-1);
+        console.log(debug(1,unbased_pako))
+        params = pako.ungzip(unbased_pako.split(","),{to:"string"});
+        
+        console.log(debug(6,params))
+
+    }else if (permaversion == "v4"){
         console.log(debug(3,"Base62Pako"))
         params = params.slice(2) // cuts out the v4 from the start
         let unbased_pako = "";
@@ -473,7 +503,7 @@ function read_url(actually_do_it){
         
         console.log(debug(6,params))
 
-    }else if (!params.includes("&tc")){
+    }else if (permaversion == "v3"){
         console.log(debug(3,"Pako URL"))
         params = pako.ungzip(params.split(","),{to:"string"})
     }
@@ -497,10 +527,14 @@ function read_url(actually_do_it){
         if (tcimg.includes("&sh=")){
             image_shape = tcimg.split("&sh=")[1]
         }
-        image_links.push(tcimg.split("&sh=")[0])
+
+        let tcimg_hl = tcimg.split("&sh=")[0]
+        if (permaversion == "v5") tcimg_hl = HLDecompress(tcimg_hl)
+
+        image_links.push(tcimg_hl)
         params = params.replace(`&tcimg=${tcimg}`,'')
         if(actually_do_it === true){
-            addimg('link',tcimg.split("&sh=")[0],image_shape)
+            addimg('link',tcimg_hl,image_shape)
         }else{
 
         }
@@ -1121,7 +1155,7 @@ function normalImages(){
 }
 
 function urlify(url_version,returnit){
-    url_version = url_version || "new"
+    url_version = url_version || "hlc"
     returnit = returnit || false;
     let full = window.location.href
     prefix = (full+"?").split("?")[0]
@@ -1157,7 +1191,9 @@ function urlify(url_version,returnit){
 
     // Add the Icons to the Permalink
     for(var i = 0; i < images_for_linking.length; i++){
-        url_additions += "&tcimg="+images_for_linking[i]
+        let tcimg = images_for_linking[i]
+        if (url_version == "hlc") tcimg = HLCompress(tcimg)
+        url_additions += "&tcimg="+tcimg
     }
    
 
@@ -1171,7 +1207,8 @@ function urlify(url_version,returnit){
     const old_url = prefix+"?"+url_additions
     const compressed = pako.gzip(url_additions.toString())
     
-    let even_more_compressed = "v4"
+    let even_more_compressed = "";
+
     let previous_measure = 0;
     compressed.toString().split(",").forEach(item => {
         if (previous_measure > 99){
@@ -1188,6 +1225,22 @@ function urlify(url_version,returnit){
         even_more_compressed += toBase62(Number(item))+"-"
     });
     even_more_compressed = even_more_compressed.substring(0,even_more_compressed.length-1)
+    
+    /*
+    if (url_version == "hlc"){
+        let dashsplits = even_more_compressed.split("-");
+        let total = "";
+        for(var i = 0; i < dashsplits.length; i++){
+            total += dashsplits[i].length.toString()
+        }
+        console.log(total)
+        total = toBase62(Number(total))
+        console.log(total)
+    }*/
+
+    
+    if(url_version == "new") even_more_compressed = "v4"+even_more_compressed
+    if(url_version == "hlc") even_more_compressed = "v5"+even_more_compressed
 
 
     let warn_message = "";
@@ -1210,20 +1263,21 @@ function urlify(url_version,returnit){
         }else if (url_version == "new"){
             if(returnit)return prefix+"?"+even_more_compressed;
             navigator.clipboard.writeText(prefix+"?"+even_more_compressed);
-            alert("Copied permalink to clipboard"+warn_message)
+            alert("Copied permalink v4 to clipboard"+warn_message)
             return;
+        }else if (url_version == "hlc"){
+            if(returnit)return prefix+"?"+even_more_compressed;
+            navigator.clipboard.writeText(prefix+"?"+even_more_compressed);
+            alert("Copied permalink to clipboard"+warn_message)
+            return;            
         }
+
     } catch (err) {
         alert("Failed to copy :(")
         console.error('Failed to copy: ', err);
         return;
     }
 
-
-    /* A remnant of my original idea to leave the permalink as plaintext in the controls box. (which stretched it wayyy tf out) 
-    I keep it here to shame myself. */
-    //document.getElementById("controls").innerHTML += "<br>"
-    //document.getElementById("controls").innerHTML += prefix+"?"+url_additions+"&tc"
 }
 
 
@@ -1261,7 +1315,7 @@ async function download_template(){
     })
 
     console.log(debug(2,"Generating URL..."));
-    const url_too = await urlify("new",true)
+    const url_too = await urlify("hlc",true)
     
     console.log(debug(2,"Generating HTML file..."))
     const templatehtmlredirect = `<!DOCTYPE html>\n<html>\n<head>\n\t<title>Tier Curator ZIPTemplate Redirect</title>\n</head>\n<body>\n\t<a id="redirector" href="${url_too}">\n\t<script>\n\t\tdocument.getElementById("redirector").click()</script>\n</body>`
